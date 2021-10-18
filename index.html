@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title>WebConf</title>
+		<link rel="stylesheet" type="text/css" href="public/css/style.css">
+		<link rel="stylesheet" href="public/css/caixa_texto.css">
+		<link rel="stylesheet" type="text/css" href="public/css/icones/uicons-regular-rounded/css/uicons-regular-rounded.css">
+		
+	</head>
+	<body>
+		<div id="cabecalho">
+			<h1>WebConf</h1>
+		</div>
+	<!--
+		<div id='acesso_usuario'>
+			<form id='login'>
+				<input type='text' placeholder='Insira seu apelido' name='apelido' id='apelido' />
+				<input type='submit' value='Entrar' />
+			</form>
+		</div>
+	-->
+		<div id="conteudo_principal">
+			<div id="tela">
+				<div class="monitor">
+					<div class="videos">
+						<video id="localVideo" autoplay muted playsinline ></video>
+					</div>
+					
+					<br />
+					<div id="connections"></div>
+				</div>
+
+				<div class="configuracoes">
+					<span class="fi fi-rr-volume"></span>
+					<span class="fi fi-rr-compress"></span>
+					<span class="fi fi-rr-expand"></span>
+					<span class="fi fi-rr-eye-crossed"></span>
+					<span class="fi fi-rr-eye"></span>
+					<div class="icone_saida">
+						<span class="fi fi-rr-user-remove"></span>
+					</div>
+					
+				</div>
+				<!--
+				<div id='sala_chat'>
+					<div id="historico_mensagens"></div>
+					<form id='chat'>
+						<input type='text' id='texto_mensagem' name='texto_mensagem' />
+						<input type='submit' value='Enviar mensagem!' />	
+					</form>
+				</div>
+				-->
+			</div>
+
+			<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.1.0/socket.io.js"></script>
+			<script src="https://webrtc.github.io/adapter/adapter-latest.js"></script>
+			<script src="public/js/main.js"></script>
+	</body>
+</html>
