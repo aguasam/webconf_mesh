@@ -32,6 +32,7 @@ function startLocalStream() {
         .then(connectSocketToSignaling).catch(handleError);
 }
 /*
+//tentativa de criar uma function sendCandidate
 function sendCandidate(socket, userId){
     console.log('pos = ' + socket.id + ' ' + userId)
     console.log('toId: ' + userId),
