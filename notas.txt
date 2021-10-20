@@ -1,0 +1,12 @@
+socket.on('sdp', (data) => {
+    sdp(socket, data);
+});
+
+-> criar um socket.on sdp e um answer
+
+-> posso substituir direto nesses socket.on ao inves de colocar
+a function, colocar td direto
+
+-> substitui a criar-function-candidate na mediaStreamConstraints
+
+->
