@@ -31,7 +31,20 @@ function startLocalStream() {
         .then(getUserMediaSuccess)
         .then(connectSocketToSignaling).catch(handleError);
 }
-
+/*
+function sendCandidate(socket, userId){
+    console.log('pos = ' + socket.id + ' ' + userId)
+    console.log('toId: ' + userId),
+    console.log('candidate: ' + event.candidate)
+    if (event.candidate) {
+        console.log(socket.id, ' Send candidate to ', userId);
+        socket.emit('candidate', { 
+            toId: userId,
+            candidate: event.candidate, 
+        });
+    }
+};
+*/
 //connectSOcketToSignaling
 function connectSocketToSignaling() {
     const socket = io.connect('http://localhost:3000', { secure: true });
@@ -46,15 +59,20 @@ function connectSocketToSignaling() {
                 clients.forEach((userId) => {
                     if (!connections[userId]) {
                         connections[userId] = new RTCPeerConnection(mediaStreamConstraints);
+                        console.log('pre = ' + socket.id + ' ' + userId)
+                        //connections[userId].onicecandidate = sendCandidate(socket, userId)
                         connections[userId].onicecandidate = () => {
                             if (event.candidate) {
+                                console.log('pos = ' + socket.id + ' ' + userId)
+                                console.log('toId: ' + userId),
+                                console.log('candidate: ' + event.candidate)
                                 console.log(socket.id, ' Send candidate to ', userId);
                                 socket.emit('candidate', { 
                                     toId: userId,
-                                    candidate: event.candidate
+                                    candidate: event.candidate, 
                                 });
                             }
-                        };
+                        }
                         connections[userId].onaddstream = () => {
                             gotRemoteStream(event, userId);
                         };
@@ -80,9 +98,7 @@ function connectSocketToSignaling() {
                 let video = document.querySelector('[data-socket="'+ userId +'"]');
                 video.parentNode.removeChild(video);
                 //printa connection
-                clients.forEach((userId) => {
-                    console.log(connections[userId] + ' left')
-                });
+                console.log(connections[userId] + ' left')
                 //remove o connection
                 delete connections[userId];
             });
