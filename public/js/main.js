@@ -31,21 +31,27 @@ function startLocalStream() {
         .then(getUserMediaSuccess)
         .then(connectSocketToSignaling).catch(handleError);
 }
-/*
-//tentativa de criar uma function sendCandidate
-function sendCandidate(socket, userId){
-    console.log('pos = ' + socket.id + ' ' + userId)
-    console.log('toId: ' + userId),
-    console.log('candidate: ' + event.candidate)
-    if (event.candidate) {
-        console.log(socket.id, ' Send candidate to ', userId);
-        socket.emit('candidate', { 
-            toId: userId,
-            candidate: event.candidate, 
-        });
-    }
-};
-*/
+
+function sendCandidate(socket, clients){
+    clients.forEach((userId) => {
+        if (!connections[userId]) {
+            connections[userId] = new RTCPeerConnection(mediaStreamConstraints);
+            connections[userId].onicecandidate = () => {
+                if (event.candidate) {
+                    socket.emit('candidate', { 
+                        toId: userId,
+                        candidate: event.candidate, 
+                    });
+                }
+            }
+            connections[userId].onaddstream = () => {
+                gotRemoteStream(event, userId);
+            };
+            connections[userId].addStream(localStream);
+        }
+    });
+}
+
 //connectSOcketToSignaling
 function connectSocketToSignaling() {
     const socket = io.connect('http://localhost:3000', { secure: true });
@@ -57,29 +63,8 @@ function connectSocketToSignaling() {
             const joinedUserId = data.joinedUserId;
             console.log(joinedUserId, ' joined');
             if (Array.isArray(clients) && clients.length > 0) {
-                clients.forEach((userId) => {
-                    if (!connections[userId]) {
-                        connections[userId] = new RTCPeerConnection(mediaStreamConstraints);
-                        console.log('pre = ' + socket.id + ' ' + userId)
-                        //connections[userId].onicecandidate = sendCandidate(socket, userId)
-                        connections[userId].onicecandidate = () => {
-                            if (event.candidate) {
-                                console.log('pos = ' + socket.id + ' ' + userId)
-                                console.log('toId: ' + userId),
-                                console.log('candidate: ' + event.candidate)
-                                console.log(socket.id, ' Send candidate to ', userId);
-                                socket.emit('candidate', { 
-                                    toId: userId,
-                                    candidate: event.candidate, 
-                                });
-                            }
-                        }
-                        connections[userId].onaddstream = () => {
-                            gotRemoteStream(event, userId);
-                        };
-                        connections[userId].addStream(localStream);
-                    }
-                });
+
+                sendCandidate(socket, clients)
 
                 if (data.count >= 2) {
                     connections[joinedUserId].createOffer(offerOptions).then((description) => {
