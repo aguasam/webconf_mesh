@@ -61,6 +61,7 @@ io.on('connection', function (socket) {
         io.sockets.emit('user-left', socket.id)
     })
 });
+
 /*   
     /////chat websocket/////
     socket.on("entrar", function(apelido, callback){
