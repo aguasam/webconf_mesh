@@ -52,6 +52,20 @@ function sendCandidate(socket, clients){
     });
 }
 
+function sendOffer(socket, joinedUserId, data){
+    if (data.count >= 2 && (socket.id != joinedUserId)) {
+        connections[joinedUserId].createOffer(offerOptions).then((description) => {
+            connections[joinedUserId].setLocalDescription(description).then(() => {
+                console.log(socket.id, ' Send offer to ', joinedUserId);
+                socket.emit('offer', {
+                    toId: joinedUserId,
+                    description: connections[joinedUserId].localDescription,
+                });
+            }).catch(handleError);
+        });
+    }
+}
+
 //connectSOcketToSignaling
 function connectSocketToSignaling() {
     const socket = io.connect('http://localhost:3000', { secure: true });
@@ -62,24 +76,17 @@ function connectSocketToSignaling() {
             const clients = data.clients;
             const joinedUserId = data.joinedUserId;
             console.log(joinedUserId, ' joined');
-            if (Array.isArray(clients) && clients.length > 0) {
-
+            const fromId = data.fromId;
+            if (Array.isArray(clients) && clients.length > 0 /*&& (socket.id != fromId)*/) {
+                //comeca a mandar candidatos ICE ate estabelecer uma conexao
+                //obs: continua a mandar msm dps da conexao estabelecida
                 sendCandidate(socket, clients)
 
-                if (data.count >= 2) {
-                    connections[joinedUserId].createOffer(offerOptions).then((description) => {
-                        connections[joinedUserId].setLocalDescription(description).then(() => {
-                            console.log(socket.id, ' Send offer to ', joinedUserId);
-                            socket.emit('sdp', {
-                                toId: joinedUserId,
-                                description: connections[joinedUserId].localDescription,
-                                type: 'sdp'
-                            });
-                        }).catch(handleError);
-                    });
-                }
+                //estabelece uma conexao direta entre os dois clientes atraves
+                //de resposta e oferta
+                sendOffer(socket, joinedUserId, data)
             }
-            ///////////////////testando a saida/////////
+            /////////saida/////////
             socket.on('user-left', (userId) => {
                 let video = document.querySelector('[data-socket="'+ userId +'"]');
                 video.parentNode.removeChild(video);
@@ -88,13 +95,13 @@ function connectSocketToSignaling() {
                 //remove o connection
                 delete connections[userId];
             });
-            /////////////////////////////////////////////
+            ////////////////////////
             socket.on('candidate', (data) => {
                 candidate(socket, data);
             });
             
-            socket.on('sdp', (data) => {
-                sdp(socket, data);
+            socket.on('answer', (data) => {
+                answer(socket, data);
             });
 
         });
@@ -110,17 +117,16 @@ function candidate(socket, data){
     }
 }
 
-function sdp(socket, data){
+function answer(socket, data){
     const fromId = data.fromId;
     if (data.description) {
-        console.log(socket.id, ' Receive sdp from ', fromId);
+        console.log(socket.id, ' Receive offer from ', fromId);
         connections[fromId].setRemoteDescription(new RTCSessionDescription(data.description))
         connections[fromId].createAnswer()
         .then((description) => {
             connections[fromId].setLocalDescription(description).then(() => {
                 console.log(socket.id, ' Send answer to ', fromId);
-                socket.emit('sdp', {
-                    type: 'sdp',
+                socket.emit('offer', {
                     toId: fromId,
                     description: connections[fromId].localDescription
                 });
@@ -129,24 +135,6 @@ function sdp(socket, data){
         .catch(handleError);
     }
 }
-/*
-function offer(socket, data, fromId){
-    if (data.description.type === 'offer') {
-        connections[fromId].createAnswer()
-            .then((description) => {
-                connections[fromId].setLocalDescription(description).then(() => {
-                    console.log(socket.id, ' Send answer to ', fromId);
-                    socket.emit('sdp', {
-                        type: 'sdp',
-                        toId: fromId,
-                        description: connections[fromId].localDescription
-                    });
-                });
-            })
-            .catch(handleError);
-    }
-}
-*/
 /////END/////
 
 function getUserMediaSuccess(mediaStream) {
