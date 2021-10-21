@@ -53,7 +53,7 @@ function sendCandidate(socket, clients){
 }
 
 function sendOffer(socket, joinedUserId, data){
-    if (data.count >= 2 && (socket.id != joinedUserId)) {
+    if (data.count >= 2) {
         connections[joinedUserId].createOffer(offerOptions).then((description) => {
             connections[joinedUserId].setLocalDescription(description).then(() => {
                 console.log(socket.id, ' Send offer to ', joinedUserId);
@@ -76,8 +76,7 @@ function connectSocketToSignaling() {
             const clients = data.clients;
             const joinedUserId = data.joinedUserId;
             console.log(joinedUserId, ' joined');
-            const fromId = data.fromId;
-            if (Array.isArray(clients) && clients.length > 0 /*&& (socket.id != fromId)*/) {
+            if (Array.isArray(clients) && clients.length > 0) {
                 //comeca a mandar candidatos ICE ate estabelecer uma conexao
                 //obs: continua a mandar msm dps da conexao estabelecida
                 sendCandidate(socket, clients)
@@ -120,12 +119,12 @@ function candidate(socket, data){
 function answer(socket, data){
     const fromId = data.fromId;
     if (data.description) {
-        console.log(socket.id, ' Receive offer from ', fromId);
+        console.log(socket.id, ' Receive answer from ', fromId);
         connections[fromId].setRemoteDescription(new RTCSessionDescription(data.description))
         connections[fromId].createAnswer()
         .then((description) => {
             connections[fromId].setLocalDescription(description).then(() => {
-                console.log(socket.id, ' Send answer to ', fromId);
+                console.log(socket.id, ' Send offer to ', fromId);
                 socket.emit('offer', {
                     toId: fromId,
                     description: connections[fromId].localDescription
@@ -154,26 +153,21 @@ startLocalStream();
         // Ao enviar uma mensagem
 		$("form#sala_chat").submit(function(e){
 			e.preventDefault();
-
 			var mensagem = $(this).find("#texto_mensagem").val();
 			var usuario = $("#lista_usuarios").val(); // Usuário selecionado na lista lateral direita
-
 			// Evento acionado no servidor para o envio da mensagem
 			// junto com o nome do usuário selecionado da lista
 			socket.emit("enviar mensagem", {msg: mensagem, usu: usuario}, function(){
 				$("form#chat #texto_mensagem").val("");
 			});
 		});
-
 		// Resposta ao envio de mensagens do servidor
 		socket.on("atualizar mensagens", function(dados){
 			var mensagem_formatada = $("<p />").text(dados.msg).addClass(dados.tipo);
 			$("#historico_mensagens").append(mensagem_formatada);
 		});
-
 		$("form#login").submit(function(e){
 			e.preventDefault();
-
 			// Evento enviado quando o usuário insere um apelido
 			socket.emit("entrar", $(this).find("#apelido").val(), function(valido){
 				if(valido){
@@ -188,7 +182,6 @@ startLocalStream();
 				}
 			});
 		});
-
 		// Quando servidor enviar uma nova lista de usuários
 		// o select é limpo e reinserida a opção Todos
 		// junto de toda a lista de usuários.
