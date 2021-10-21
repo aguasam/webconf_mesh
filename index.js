@@ -53,8 +53,8 @@ io.on('connection', function (socket) {
 	socket.on('candidate', function(data) {
         io.to(data.toId).emit('candidate', { fromId: socket.id, ...data });
     });
-    socket.on('sdp', function(data) {
-        io.to(data.toId).emit('sdp', { fromId: socket.id, ...data });
+    socket.on('offer', function(data) {
+        io.to(data.toId).emit('answer', { fromId: socket.id, ...data });
     });
 
     socket.on('disconnect', function() {
