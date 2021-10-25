@@ -63,6 +63,7 @@ function connectSocketToSignaling() {
             const fromId = data.fromId;
 
             //como que configurou esse if
+            userId = joinedUserId
             if(joinedUserId != localUserId){
                 connections[userId] = createPC(socket, localStream, userId)
 
@@ -133,6 +134,7 @@ function offer(socket, data){
 }
 
 function answer(socket, data){
+    const fromId = data.fromId;
     console.log(socket.id, ' Receive answer from ', fromId);
     connections[fromId].setRemoteDescription(new RTCSessionDescription(data.description))
         
