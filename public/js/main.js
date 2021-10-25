@@ -22,7 +22,7 @@ function gotRemoteStream(event, userId) {
 }
 
 function gotIceCandidate(fromId, candidate) {
-    connections[fromId].addIceCandidate(new RTCIceCandidate(candidate)).catch(handleError);
+    pc.addIceCandidate(new RTCIceCandidate(candidate)).catch(handleError);
 }
 
 
