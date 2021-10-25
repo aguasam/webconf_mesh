@@ -32,7 +32,7 @@ function startLocalStream() {
         .then(connectSocketToSignaling).catch(handleError);
 }
 
-function conectPC(socket, userId){
+function createPC(socket, localStream, userId){
     let pc = new RTCPeerConnection(mediaStreamConstraints);
     pc.onicecandidate = () => {
         if (event.candidate) {
@@ -50,20 +50,6 @@ function conectPC(socket, userId){
     return pc;
 }
 
-function sendOffer(socket, joinedUserId, data){
-    if (data.count >= 2 && (socket.id != joinedUserId)) {
-        connections[joinedUserId].createOffer(offerOptions).then((description) => {
-            connections[joinedUserId].setLocalDescription(description).then(() => {
-                console.log(socket.id, ' Send offer to ', joinedUserId);
-                socket.emit('offer', {
-                    toId: joinedUserId,
-                    description: connections[joinedUserId].localDescription,
-                });
-            }).catch(handleError);
-        });
-    }
-}
-
 //connectSOcketToSignaling
 function connectSocketToSignaling() {
     const socket = io.connect('http://localhost:3000', { secure: true });
@@ -77,18 +63,18 @@ function connectSocketToSignaling() {
             const fromId = data.fromId;
 
             //como que configurou esse if
-            if(!localUserId){
-                connections[userId] = conectPC(socket, userId)
-            }
+            if(joinedUserId != localUserId){
+                connections[userId] = createPC(socket, localStream, userId)
 
-            if (Array.isArray(clients) && clients.length > 0 /*&& (socket.id != fromId)*/) {
-                //comeca a mandar candidatos ICE ate estabelecer uma conexao
-                //obs: continua a mandar msm dps da conexao estabelecida
-                sendCandidate(socket, clients)
-
-                //estabelece uma conexao direta entre os dois clientes atraves
-                //de resposta e oferta
-                sendOffer(socket, joinedUserId, data)
+                connections[joinedUserId].createOffer(offerOptions).then((description) => {
+                    connections[joinedUserId].setLocalDescription(description).then(() => {
+                        console.log(socket.id, ' Send offer to ', joinedUserId);
+                        socket.emit('offer', {
+                            toId: joinedUserId,
+                            description: connections[joinedUserId].localDescription,
+                        });
+                    }).catch(handleError);
+                });
             }
 
             /////////saida/////////
@@ -105,6 +91,10 @@ function connectSocketToSignaling() {
                 candidate(socket, data);
             });
             
+            socket.on('offer', (data) => {
+                offer(socket, data);
+            });
+
             socket.on('answer', (data) => {
                 answer(socket, data);
             });
@@ -122,8 +112,9 @@ function candidate(socket, data){
     }
 }
 
-function answer(socket, data){
+function offer(socket, data){
     const fromId = data.fromId;
+    connections[fromId] = createPC(socket, localStream, userId)
     if (data.description) {
         console.log(socket.id, ' Receive offer from ', fromId);
         connections[fromId].setRemoteDescription(new RTCSessionDescription(data.description))
@@ -131,7 +122,7 @@ function answer(socket, data){
         .then((description) => {
             connections[fromId].setLocalDescription(description).then(() => {
                 console.log(socket.id, ' Send answer to ', fromId);
-                socket.emit('offer', {
+                socket.emit('answer', {
                     toId: fromId,
                     description: connections[fromId].localDescription
                 });
@@ -139,6 +130,13 @@ function answer(socket, data){
         })
         .catch(handleError);
     }
+}
+
+function answer(socket, data){
+    console.log(socket.id, ' Receive answer from ', fromId);
+    connections[fromId].setRemoteDescription(new RTCSessionDescription(data.description))
+        
+
 }
 /////END/////
 

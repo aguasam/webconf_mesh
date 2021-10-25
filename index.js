@@ -54,8 +54,12 @@ io.on('connection', function (socket) {
         io.to(data.toId).emit('candidate', { fromId: socket.id, ...data });
     });
     socket.on('offer', function(data) {
-        io.to(data.toId).emit('answer', { fromId: socket.id, ...data });
+        io.to(data.toId).emit('offer', { fromId: socket.id, ...data });
     });
+
+	socket.on("answer" , function(data){
+        io.to(data.toId).emit('answer', { fromId: socket.id, ...data });
+	})
 
     socket.on('disconnect', function() {
         io.sockets.emit('user-left', socket.id)
