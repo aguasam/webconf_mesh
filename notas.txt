@@ -9,4 +9,4 @@ a function, colocar td direto
 
 -> substitui a criar-function-candidate na mediaStreamConstraints
 
-->
+->criar a funcao connectPC

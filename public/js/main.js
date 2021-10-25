@@ -32,24 +32,22 @@ function startLocalStream() {
         .then(connectSocketToSignaling).catch(handleError);
 }
 
-function sendCandidate(socket, clients){
-    clients.forEach((userId) => {
-        if (!connections[userId]) {
-            connections[userId] = new RTCPeerConnection(mediaStreamConstraints);
-            connections[userId].onicecandidate = () => {
-                if (event.candidate) {
-                    socket.emit('candidate', { 
-                        toId: userId,
-                        candidate: event.candidate, 
-                    });
-                }
-            }
-            connections[userId].onaddstream = () => {
-                gotRemoteStream(event, userId);
-            };
-            connections[userId].addStream(localStream);
+function conectPC(socket, userId){
+    let pc = new RTCPeerConnection(mediaStreamConstraints);
+    pc.onicecandidate = () => {
+        if (event.candidate) {
+            socket.emit('candidate', { 
+                toId: userId,
+                candidate: event.candidate, 
+            });
         }
-    });
+    }
+    pc.onaddstream = () => {
+        gotRemoteStream(event, userId);
+    };
+    pc.addStream(localStream);
+
+    return pc;
 }
 
 function sendOffer(socket, joinedUserId, data){
@@ -77,6 +75,12 @@ function connectSocketToSignaling() {
             const joinedUserId = data.joinedUserId;
             console.log(joinedUserId, ' joined');
             const fromId = data.fromId;
+
+            //como que configurou esse if
+            if(!localUserId){
+                connections[userId] = conectPC(socket, userId)
+            }
+
             if (Array.isArray(clients) && clients.length > 0 /*&& (socket.id != fromId)*/) {
                 //comeca a mandar candidatos ICE ate estabelecer uma conexao
                 //obs: continua a mandar msm dps da conexao estabelecida
@@ -86,6 +90,7 @@ function connectSocketToSignaling() {
                 //de resposta e oferta
                 sendOffer(socket, joinedUserId, data)
             }
+
             /////////saida/////////
             socket.on('user-left', (userId) => {
                 let video = document.querySelector('[data-socket="'+ userId +'"]');
