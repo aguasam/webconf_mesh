@@ -12,3 +12,5 @@ a function, colocar td direto
 ->criar a funcao connectPC
 
 parece que so mudou o sendcandidate -> connectPC e o sendOffer abriu ali na funcao principal
+
+evt -> event
