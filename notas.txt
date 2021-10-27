@@ -13,4 +13,12 @@ a function, colocar td direto
 
 parece que so mudou o sendcandidate -> connectPC e o sendOffer abriu ali na funcao principal
 
+/////////////////////////pesquisar
 evt -> event
+
+setInterval
+
+await
+-> fazer mais estatiscas
+
+colocar as estatisticas em uma url

@@ -75,6 +75,26 @@ function createPC(socket, localStream, userId){
     };
     connections[userId].addStream(localStream);
 
+
+    setInterval( () => {
+        //transformar em uma func
+        //await
+        const stats = await pc.getStats(null);
+
+        stats.forEach(report => {
+            if(report.type == "inbound-rtp"){
+                dadosIntervalo.packetLost = report.packetLost - dadoInicial.packetLost;
+                dadoInicial.packetLost = report.packetLost;
+
+                console.log(dadoInicial)
+            }
+        })
+    }
+        ,1000)
+
+    
+ 
+
     return pc;
 }
 
@@ -167,6 +187,7 @@ function handleError(e) {
     //console.log(e);
     //alert('Something went wrong');
 }
+
 
 startLocalStream();
 
