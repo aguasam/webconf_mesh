@@ -17,7 +17,7 @@ app.get("/", function(req,res){
 //eu vou mandar para o html dessa pagina e ter os estatus escritos la
 // ou é outra coisa
 app.get("/stats", function(req, res){
-	res.sendFile(__dirname + "/stats.html")
+	res.send(stats)
 })
 
 
@@ -60,6 +60,10 @@ io.on('connection', function (socket) {
     socket.on('disconnect', function() {
         io.sockets.emit('user-left', socket.id)
     })
+
+	socket.on('stats', function(data)){
+		
+	}
 });
 
 /*   

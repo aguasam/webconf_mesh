@@ -56,7 +56,6 @@ function startLocalStream() {
 }
 
 async function estatisticas(pc){
-    
     pc.getStats(null).then(stats => {
         var statusOut = " ";
 
@@ -67,6 +66,7 @@ async function estatisticas(pc){
                 })
             }
         })
+        this.socket.emit("stats", statusOut)
         console.log(statusOut)
     })
 };
