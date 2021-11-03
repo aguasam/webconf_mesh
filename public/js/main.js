@@ -90,11 +90,11 @@ function createPC(socket, localStream, userId){
     };
     connections[userId].addStream(localStream);
 
-    //////////////////////////////////////////   
+    /////estatisticas/////   
     setInterval(() => {
         this.estatisticas(pc);
       },1000)
-
+    
     return pc;
 }
 

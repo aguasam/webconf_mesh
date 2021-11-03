@@ -1,24 +1,26 @@
-//const express = require('express');
+const express = require('express');
+const app = express()
 //const server = express();
 //const http = require('http').Server(server);
 var http = require('http').createServer(resposta); // Criando o servidor
 var fs = require('fs'); // Sistema de arquivos
 const io = require('socket.io')(http);
 
-//server.use(express.static('public'));
-/*
-http.listen(3000, () => {
-    console.log('Server started at: 3000');
-});
-
-server.get('/', function(req, res){
-    res.sendFile(__dirname + '/index.html');
-});
-*/
-
 http.listen(3000);
-
 console.log("Aplicação está em execução...");
+
+app.get("/", function(req,res){
+	res.sendFile(__dirname + "/index.html")
+})
+
+//duvida
+//eu vou mandar para o html dessa pagina e ter os estatus escritos la
+// ou é outra coisa
+app.get("/stats", function(req, res){
+	res.sendFile(__dirname + "/stats.html")
+})
+
+
 
 // Função principal de resposta as requisições do servidor
 function resposta (req, res) {
@@ -43,12 +45,6 @@ function resposta (req, res) {
 
 io.on('connection', function (socket) {
     /////voIP webRTC/////
-	/*
-    io.sockets.emit('user-joined', { clients:  Object.keys(io.sockets.clients().sockets), count: io.engine.clientsCount, joinedUserId: socket.id});
-    socket.on('signaling', function(data) {
-        io.to(data.toId).emit('signaling', { fromId: socket.id, ...data });
-    });
-	*/
 	io.sockets.emit('user-joined', { clients:  Object.keys(io.sockets.clients().sockets), count: io.engine.clientsCount, joinedUserId: socket.id});
 	socket.on('candidate', function(data) {
         io.to(data.toId).emit('candidate', { fromId: socket.id, ...data });
@@ -65,16 +61,7 @@ io.on('connection', function (socket) {
         io.sockets.emit('user-left', socket.id)
     })
 });
-/*
-//Escuta quando as stats devem ser atualizadas.
-socket.on("stats", function(dados, userId){
-	//peers = userId;
-	//let dado = pegarTempo();
-	//stats.set(userId, dados);
-	//socket.emit("atualizar_hora", (userId, dado))
-	
-});
-*/
+
 /*   
     /////chat websocket/////
     socket.on("entrar", function(apelido, callback){
