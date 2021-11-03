@@ -65,7 +65,16 @@ io.on('connection', function (socket) {
         io.sockets.emit('user-left', socket.id)
     })
 });
-
+/*
+//Escuta quando as stats devem ser atualizadas.
+socket.on("stats", function(dados, userId){
+	//peers = userId;
+	//let dado = pegarTempo();
+	//stats.set(userId, dados);
+	//socket.emit("atualizar_hora", (userId, dado))
+	
+});
+*/
 /*   
     /////chat websocket/////
     socket.on("entrar", function(apelido, callback){

@@ -55,7 +55,22 @@ function startLocalStream() {
   
 }
 
-//n coloquei o connections aqui
+async function estatisticas(pc){
+    
+    pc.getStats(null).then(stats => {
+        var statusOut = " ";
+
+        stats.forEach(report => {
+            if(report.type === "inbound-rtp"){
+                Object.keys(report).forEach(statName => {
+                    statusOut += `${statName}: ${report[statName]}\n`;
+                })
+            }
+        })
+        console.log(statusOut)
+    })
+};
+
 function createPC(socket, localStream, userId){
     const pc = new RTCPeerConnection(mediaStreamConstraints);
     pc.onicecandidate = () => {
@@ -75,25 +90,10 @@ function createPC(socket, localStream, userId){
     };
     connections[userId].addStream(localStream);
 
-
-    setInterval( () => {
-        //transformar em uma func
-        //await
-        const stats = await pc.getStats(null);
-
-        stats.forEach(report => {
-            if(report.type == "inbound-rtp"){
-                dadosIntervalo.packetLost = report.packetLost - dadoInicial.packetLost;
-                dadoInicial.packetLost = report.packetLost;
-
-                console.log(dadoInicial)
-            }
-        })
-    }
-        ,1000)
-
-    
- 
+    //////////////////////////////////////////   
+    setInterval(() => {
+        this.estatisticas(pc);
+      },1000)
 
     return pc;
 }
@@ -114,7 +114,6 @@ function connectSocketToSignaling() {
             userId = joinedUserId
             if(joinedUserId != localUserId){
                 connections[userId] = createPC(socket, localStream, joinedUserId)
-                console.log("passou por aqui")
                 connections[joinedUserId].createOffer(offerOptions).then((description) => {
                     connections[joinedUserId].setLocalDescription(description).then(() => {
                         console.log(socket.id, ' Send offer to ', joinedUserId);
@@ -148,7 +147,6 @@ function connectSocketToSignaling() {
                 const fromId = data.fromId;
                 if (data.description) {
                     connections[fromId] = createPC(socket, localStream, userId)
-                    console.log("ou por aqui")
                     console.log(socket.id, ' Receive offer from ', fromId);
                     connections[fromId].setRemoteDescription(new RTCSessionDescription(data.description))
                     connections[fromId].createAnswer()
