@@ -53,28 +53,20 @@ io.on('connection', function (socket) {
 	socket.on('candidate', function(data) {
         io.to(data.toId).emit('candidate', { fromId: socket.id, ...data });
     });
-    socket.on('offer', function(data) {
-        io.to(data.toId).emit('offer', { fromId: socket.id, ...data });
+    socket.on('sdp', function(data) {
+        io.to(data.toId).emit('sdp', { fromId: socket.id, ...data });
     });
-
-	socket.on("answer" , function(data){
-        io.to(data.toId).emit('answer', { fromId: socket.id, ...data });
-	})
 
     socket.on('disconnect', function() {
         io.sockets.emit('user-left', socket.id)
     })
+	socket.on('offer', function(data) { 
+        io.to(data.toId).emit('offer', { fromId: socket.id, ...data });
+    });
+	socket.on('answer', function(data) { 
+        io.to(data.toId).emit('answer', { fromId: socket.id, ...data });
+    });
 });
-/*
-//Escuta quando as stats devem ser atualizadas.
-socket.on("stats", function(dados, userId){
-	//peers = userId;
-	//let dado = pegarTempo();
-	//stats.set(userId, dados);
-	//socket.emit("atualizar_hora", (userId, dado))
-	
-});
-*/
 /*   
     /////chat websocket/////
     socket.on("entrar", function(apelido, callback){

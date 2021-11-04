@@ -25,45 +25,77 @@ function gotIceCandidate(fromId, candidate) {
     connections[fromId].addIceCandidate(new RTCIceCandidate(candidate)).catch(handleError);
 }
 
-
+/*
 function startLocalStream() {
     navigator.mediaDevices.getUserMedia(mediaStreamConstraints)
         .then(getUserMediaSuccess)
         .then(connectSocketToSignaling).catch(handleError);
 }
+*/
 
-function sendCandidate(socket, clients){
-    clients.forEach((userId) => {
-        if (!connections[userId]) {
-            connections[userId] = new RTCPeerConnection(mediaStreamConstraints);
-            connections[userId].onicecandidate = () => {
-                if (event.candidate) {
-                    socket.emit('candidate', { 
-                        toId: userId,
-                        candidate: event.candidate, 
-                    });
-                }
-            }
-            connections[userId].onaddstream = () => {
-                gotRemoteStream(event, userId);
-            };
-            connections[userId].addStream(localStream);
-        }
-    });
+function startLocalStream() {
+    navigator.mediaDevices
+    .getUserMedia({
+      //audio: true,
+      video: true
+      //{ width: 800, height: 600 } -> Ja tive que especificar por causa do firefox.
+    })
+    .then((mediaStream) => {
+      localStream = mediaStream;
+      localVideo.srcObject = mediaStream;
+
+      //emit("localStream", mediaStream);
+      connectSocketToSignaling(mediaStream);
+      console.log("Pegando userMedia com constraints:", {
+        video: true,
+        audio: true,
+      });
+    })
+    .catch((e) => console.log("Error: ", e));
+  
 }
 
-function sendOffer(socket, joinedUserId, data){
-    if (data.count >= 2 && (socket.id != joinedUserId)) {
-        connections[joinedUserId].createOffer(offerOptions).then((description) => {
-            connections[joinedUserId].setLocalDescription(description).then(() => {
-                console.log(socket.id, ' Send offer to ', joinedUserId);
-                socket.emit('offer', {
-                    toId: joinedUserId,
-                    description: connections[joinedUserId].localDescription,
-                });
-            }).catch(handleError);
-        });
+async function estatisticas(pc){
+    
+    pc.getStats(null).then(stats => {
+        var statusOut = " ";
+
+        stats.forEach(report => {
+            if(report.type === "inbound-rtp"){
+                Object.keys(report).forEach(statName => {
+                    statusOut += `${statName}: ${report[statName]}\n`;
+                })
+            }
+        })
+        console.log(statusOut)
+    })
+};
+
+function createPC(socket, localStream, userId){
+    const pc = new RTCPeerConnection(mediaStreamConstraints);
+    pc.onicecandidate = () => {
+        if (event.candidate/* && (socket.id != userId)*/) {
+            console.log(socket.id, ' Send Candidate to ', userId);
+            socket.emit('candidate', { 
+                toId: userId,
+                candidate: event.candidate, 
+            });
+        }
     }
+
+    connections[userId] = pc
+
+    connections[userId].onaddstream = () => {
+        gotRemoteStream(event, userId);
+    };
+    connections[userId].addStream(localStream);
+
+    //////////////////////////////////////////   
+    setInterval(() => {
+        this.estatisticas(pc);
+      },1000)
+
+    return pc;
 }
 
 //connectSOcketToSignaling
@@ -77,15 +109,22 @@ function connectSocketToSignaling() {
             const joinedUserId = data.joinedUserId;
             console.log(joinedUserId, ' joined');
             const fromId = data.fromId;
-            if (Array.isArray(clients) && clients.length > 0 /*&& (socket.id != fromId)*/) {
-                //comeca a mandar candidatos ICE ate estabelecer uma conexao
-                //obs: continua a mandar msm dps da conexao estabelecida
-                sendCandidate(socket, clients)
 
-                //estabelece uma conexao direta entre os dois clientes atraves
-                //de resposta e oferta
-                sendOffer(socket, joinedUserId, data)
+            //como que configurou esse if
+            userId = joinedUserId
+            if(joinedUserId != localUserId){
+                connections[userId] = createPC(socket, localStream, joinedUserId)
+                connections[joinedUserId].createOffer(offerOptions).then((description) => {
+                    connections[joinedUserId].setLocalDescription(description).then(() => {
+                        console.log(socket.id, ' Send offer to ', joinedUserId);
+                        socket.emit('offer', {
+                            toId: joinedUserId,
+                            description: connections[joinedUserId].localDescription,
+                        });
+                    }).catch(handleError);
+                });
             }
+
             /////////saida/////////
             socket.on('user-left', (userId) => {
                 let video = document.querySelector('[data-socket="'+ userId +'"]');
@@ -97,44 +136,44 @@ function connectSocketToSignaling() {
             });
             ////////////////////////
             socket.on('candidate', (data) => {
-                candidate(socket, data);
+                const fromId = data.fromId;
+                console.log(socket.id, ' Receive Candidate from ', fromId);
+                if (data.candidate) {
+                    gotIceCandidate(fromId, data.candidate);
+                }
             });
             
+            socket.on('offer', (data) => {
+                const fromId = data.fromId;
+                if (data.description) {
+                    connections[fromId] = createPC(socket, localStream, userId)
+                    console.log(socket.id, ' Receive offer from ', fromId);
+                    connections[fromId].setRemoteDescription(new RTCSessionDescription(data.description))
+                    connections[fromId].createAnswer()
+                    .then((description) => {
+                            return connections[fromId].setLocalDescription(description)
+                    })
+                    .then(() => {
+                        console.log(socket.id, ' Send answer to ', fromId);
+                        socket.emit('answer', {
+                            toId: fromId,
+                             description: connections[fromId].localDescription
+                        });
+                    })
+                    .catch(handleError);
+                }
+            });
+
             socket.on('answer', (data) => {
-                answer(socket, data);
+                const fromId = data.fromId;
+                console.log(socket.id, ' Receive answer from ', fromId);
+                connections[fromId].setRemoteDescription(new RTCSessionDescription(data.description))
             });
 
         });
     })
 }
-/////end/////
 
-function candidate(socket, data){
-    const fromId = data.fromId;
-    console.log(socket.id, ' Receive Candidate from ', fromId);
-    if (data.candidate) {
-        gotIceCandidate(fromId, data.candidate);
-    }
-}
-
-function answer(socket, data){
-    const fromId = data.fromId;
-    if (data.description) {
-        console.log(socket.id, ' Receive offer from ', fromId);
-        connections[fromId].setRemoteDescription(new RTCSessionDescription(data.description))
-        connections[fromId].createAnswer()
-        .then((description) => {
-            connections[fromId].setLocalDescription(description).then(() => {
-                console.log(socket.id, ' Send answer to ', fromId);
-                socket.emit('offer', {
-                    toId: fromId,
-                    description: connections[fromId].localDescription
-                });
-            });
-        })
-        .catch(handleError);
-    }
-}
 /////END/////
 
 function getUserMediaSuccess(mediaStream) {
@@ -146,6 +185,7 @@ function handleError(e) {
     //console.log(e);
     //alert('Something went wrong');
 }
+
 
 startLocalStream();
 
