@@ -21,7 +21,7 @@ app.get("/stats", function(req, res){
 	})
 
 	let obj = {
-		'As estatísticas dos users são ': estatus
+		'As estatisticas dos users sao ': estatus
 	}
 	if(!estatus) return obj = 0;
 	if(obj == 0) return res.status(204).json();
