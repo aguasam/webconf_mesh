@@ -13,14 +13,21 @@ app.get("/", function(req,res){
 	res.sendFile(__dirname + "/index.html")
 })
 
-//duvida
-//eu vou mandar para o html dessa pagina e ter os estatus escritos la
-// ou é outra coisa
+
 app.get("/stats", function(req, res){
-	res.send(stats)
+	stats.forEach((stats, userId)=>{
+		if (userId == 'socket_test')	estatus.set(userId, stats)
+		else estatus[userId] = stats;
+	})
+
+	let obj = {
+		'As estatísticas dos users são ': estatus
+	}
+	if(!estatus) return obj = 0;
+	if(obj == 0) return res.status(204).json();
+	res.json(obj);
+
 })
-
-
 
 // Função principal de resposta as requisições do servidor
 function resposta (req, res) {
@@ -34,7 +41,7 @@ function resposta (req, res) {
 		function (err, data) {
 			if (err) {
 				res.writeHead(404);
-				return res.end('Página ou arquivo não encontrados');
+				return res.end('Pagina ou arquivo nao encontrados');
 			}
 
 			res.writeHead(200);
@@ -61,9 +68,11 @@ io.on('connection', function (socket) {
         io.sockets.emit('user-left', socket.id)
     })
 
-	socket.on('stats', function(data)){
-		
-	}
+	socket.on('stats', function(data){
+		//stats.set(userId, dados);
+		stats = data.stats
+		userId = data.userId
+	})
 });
 
 /*   

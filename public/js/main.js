@@ -55,7 +55,8 @@ function startLocalStream() {
   
 }
 
-async function estatisticas(pc){
+async function estatisticas(socket,pc){
+    userId = socket.id
     pc.getStats(null).then(stats => {
         var statusOut = " ";
 
@@ -66,7 +67,10 @@ async function estatisticas(pc){
                 })
             }
         })
-        this.socket.emit("stats", statusOut)
+        socket.emit("stats", {
+            stats:statusOut,
+            userId: socket.id
+        });
         console.log(statusOut)
     })
 };
@@ -92,7 +96,7 @@ function createPC(socket, localStream, userId){
 
     /////estatisticas/////   
     setInterval(() => {
-        this.estatisticas(pc);
+        this.estatisticas(socket, pc);
       },1000)
     
     return pc;
