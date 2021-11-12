@@ -55,19 +55,47 @@ function startLocalStream() {
   
 }
 
-async function estatisticas(pc){
+function estatisticas(socket, pc){
     
     pc.getStats(null).then(stats => {
-        var statusOut = " ";
+        var statusOut = {
+            packetsLost: 0,
+            packetsReceived: 0, 
+            packetsSent: 0,
+            bytesSent: 0,
+            bytesReceived: 0,
+            dataChannelsOpened: 0,
+            dataChannelsClosed: 0,
+            remoteCandidateId: null,
+            localCandidateId: null,
+            totalEncodeTime: 0, 
+      
+        };
 
         stats.forEach(report => {
             if(report.type === "inbound-rtp"){
-                Object.keys(report).forEach(statName => {
-                    statusOut += `${statName}: ${report[statName]}\n`;
-                })
+                statusOut.packetLost = report.packetLost
+            }
+            if ( report.type == "transport" ){
+                statusOut.packetsReceived = report.packetsReceived;
+                statusOut.packetsSent = report.packetsSent;
+                statusOut.bytesSent = report.bytesSent;
+                statusOut.bytesReceived = report.bytesReceived;
+            } 
+            if(report.type == "peer-connection"){
+                statusOut.dataChannelsOpened = report.dataChannelsOpened;
+                statusOut.dataChannelsClosed = report.dataChannelsClosed;
+            }
+            if(report.type == "candidate-pair"){
+                statusOut.localCandidateId = report.localCandidateId;
+                statusOut.remoteCandidateId = report.remoteCandidateId;
+            }
+            if(report.type == "outbound-rtp"){
+                statusOut.totalEncodeTime = report.totalEncodeTime;
             }
         })
         console.log(statusOut)
+        socket.emit('estatisticas', statusOut, socket.id)
     })
 };
 
@@ -90,11 +118,11 @@ function createPC(socket, localStream, userId){
     };
     connections[userId].addStream(localStream);
 
-    //////////////////////////////////////////   
+    /////estats/////
     setInterval(() => {
-        this.estatisticas(pc);
+        this.estatisticas(socket, pc);
       },1000)
-
+    ///////////////
     return pc;
 }
 
@@ -110,7 +138,6 @@ function connectSocketToSignaling() {
             console.log(joinedUserId, ' joined');
             const fromId = data.fromId;
 
-            //como que configurou esse if
             userId = joinedUserId
             if(joinedUserId != localUserId){
                 connections[userId] = createPC(socket, localStream, joinedUserId)
@@ -187,57 +214,61 @@ function handleError(e) {
 }
 
 
-startLocalStream();
 
 /*
 //////cha webSocket/////
-        // Ao enviar uma mensagem
-		$("form#sala_chat").submit(function(e){
-			e.preventDefault();
+var socket = io.connect();
+var dadosClients = new Object();
 
-			var mensagem = $(this).find("#texto_mensagem").val();
-			var usuario = $("#lista_usuarios").val(); // Usuário selecionado na lista lateral direita
+// Ao enviar uma mensagem
+$("form#sala_chat").submit(function(e){
+    e.preventDefault();
 
-			// Evento acionado no servidor para o envio da mensagem
-			// junto com o nome do usuário selecionado da lista
-			socket.emit("enviar mensagem", {msg: mensagem, usu: usuario}, function(){
-				$("form#chat #texto_mensagem").val("");
-			});
-		});
+    var mensagem = $(this).find("#texto_mensagem").val();
+    var usuario = $("#lista_usuarios").val(); // Usuário selecionado na lista lateral direita
 
-		// Resposta ao envio de mensagens do servidor
-		socket.on("atualizar mensagens", function(dados){
-			var mensagem_formatada = $("<p />").text(dados.msg).addClass(dados.tipo);
-			$("#historico_mensagens").append(mensagem_formatada);
-		});
+    // Evento acionado no servidor para o envio da mensagem
+    // junto com o nome do usuário selecionado da lista
+    socket.emit("enviar mensagem", {msg: mensagem, usu: usuario}, function(){
+        $("form#chat #texto_mensagem").val("");
+    });
+});
 
-		$("form#login").submit(function(e){
-			e.preventDefault();
+// Resposta ao envio de mensagens do servidor
+socket.on("atualizar mensagens", function(dados){
+    var mensagem_formatada = $("<p />").text(dados.msg).addClass(dados.tipo);
+    $("#historico_mensagens").append(mensagem_formatada);
+});
 
-			// Evento enviado quando o usuário insere um apelido
-			socket.emit("entrar", $(this).find("#apelido").val(), function(valido){
-				if(valido){
-					// Caso não exista nenhum usuário com o mesmo nome, o painel principal é exibido
-					$("#acesso_usuario").hide();
-					$("#sala_chat").show();
-                    $("conteudo_principal").show();
-				}else{
-					// Do contrário o campo de mensagens é limpo e é apresentado um alert
-					$("#acesso_usuario").val("");
-					alert("Nome já utilizado nesta sala");
-				}
-			});
-		});
+$("form#login").submit(function(e){
+    e.preventDefault();
 
-		// Quando servidor enviar uma nova lista de usuários
-		// o select é limpo e reinserida a opção Todos
-		// junto de toda a lista de usuários.
-		socket.on("atualizar usuarios", function(usuarios){
-			$("#lista_usuarios").empty();
-			$("#lista_usuarios").append("<option value=''>Todos</option>");
-				$.each(usuarios, function(indice){
-					var opcao_usuario = $("<option />").text(usuarios[indice]);
-					$("#lista_usuarios").append(opcao_usuario);
-			});
-		});
+    // Evento enviado quando o usuário insere um apelido
+    socket.emit("entrar", $(this).find("#apelido").val(), function(valido){
+        if(valido){
+            // Caso não exista nenhum usuário com o mesmo nome, o painel principal é exibido
+            $("#acesso_usuario").hide();
+            $("#sala_chat").show();
+            $("conteudo_principal").show();
+        }else{
+            // Do contrário o campo de mensagens é limpo e é apresentado um alert
+            $("#acesso_usuario").val("");
+            alert("Nome já utilizado nesta sala");
+        }
+    });
+});
+
+// Quando servidor enviar uma nova lista de usuários
+// o select é limpo e reinserida a opção Todos
+// junto de toda a lista de usuários.
+socket.on("atualizar usuarios", function(usuarios){
+    $("#lista_usuarios").empty();
+    $("#lista_usuarios").append("<option value=''>Todos</option>");
+
+    $.each(usuarios, function(indice){
+        var opcao_usuario = $("<option />").text(usuarios[indice]);
+        $("#lista_usuarios").append(opcao_usuario);
+    });
+});
 */
+        startLocalStream();

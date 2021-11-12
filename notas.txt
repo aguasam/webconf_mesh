@@ -22,3 +22,20 @@ await
 -> fazer mais estatiscas
 
 colocar as estatisticas em uma url
+
+ja entendi bem como pega as estatisticas ->
+agr falta colocar elas em uma pagina pra tornar a aplicacao mais restful
+
+duvidas: perguntar quais outras estatisticas a mais colocar aqui//ele sempre me falar que é
+pra colocar as que eu acho mais importantes
+
+upp -> colocar um switch ao de if
+
+duvida -> como que mostra as estatisticas
+
+
+tarefa -> usar os testes unitarios com o jest
+--> criar um teste para as estatisticas, colocando umas estatisticas fakes e vendo se funciona
+
+Codigo do luis
+async function statistics -> n usa o await dps, msm coisa que eu tava fazendo
