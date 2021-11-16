@@ -39,3 +39,6 @@ tarefa -> usar os testes unitarios com o jest
 
 Codigo do luis
 async function statistics -> n usa o await dps, msm coisa que eu tava fazendo
+
+
+ajeitar o teste das estatisticas (tem estatisticas a mais ali e as minhas n estaao com os calculos certos)

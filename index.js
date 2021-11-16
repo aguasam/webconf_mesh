@@ -1,65 +1,36 @@
+const funcaoStats = require('./public/func/func.js');
 const express = require('express');
 const server = express();
 const app = express();
 var http = require('http').Server(server); // Criando o servidor
 const io = require('socket.io')(http);
-var fs = require('fs'); // Sistema de arquivos
+//var fs = require('fs'); // Sistema de arquivos
 var stats = []
+const HOST = '0.0.0.0'
 
-
-server.use(express.static('public'));
+app.use(express.static('public'));
 app.use(express.json());
-/*
+
 server.get("/stats", function(req,res){	
-    let obj = funcaoStats(dadosStats,peers)
+    let obj = funcaoStats(stats,peers)
 	res.json(obj);
 });
-
+/*
 server.get("/clients", function(req,res){
     let obj = dados
 	res.json(obj);
 });
-
-http.listen(3000, () => {  //cria o servidor
-    console.log('Server started at: 3000');
-});
-
-server.get('/', function(req, res){ //Pega o html e coloca no servidor
-    res.sendFile(__dirname + '/index.html');
-});
 */
 
-http.listen(3000);
+//cria o servidor
+http.listen(3000,HOST, () => {  
+    console.log('O server ta na porta 3000');
+});
 
-console.log("Aplicação está em execução...");
-
-// Função principal de resposta as requisições do servidor
-function resposta (req, res) {
-    var arquivo = "";
-    if(req.url == "/"){
-        arquivo = dirname + '/index.html';
-    }
-    else if(req.url == "/estatisticas"){
-        console.log("entrou aqui")
-        //console.log(stats)
-        arquivo = dirname + '/estat.html'
-        //res.send(stats)
-    }
-    else{
-        arquivo = __dirname + req.url;
-    }
-    fs.readFile(arquivo,
-        function (err, data) {
-            if (err) {
-                res.writeHead(404);
-                return res.end('Pagina ou arquivo nao encontrados');
-            }
-
-            res.writeHead(200);
-            res.end(data);
-        }
-    );
-}
+//Pega o html e coloca no servidor
+server.get('/', function(req, res){ 
+    res.sendFile(__dirname + '/index.html');
+});
 
 io.on('connection', function (socket) {
     /////voIP webRTC/////
@@ -84,7 +55,7 @@ io.on('connection', function (socket) {
 		stats = dados
 		funcaoStats(dadosStats, peers)
 	})
-/*
+
     /////chat websocket/////
     socket.on("entrar", function(apelido, callback){
 		var mensagem = "[ " + pegarDataAtual() + " ] " + apelido + " acabou de entrar na sala";
@@ -142,7 +113,6 @@ io.on('connection', function (socket) {
 
 		armazenaMensagem(obj_mensagem);
 	});
-*/
 });
 
 // Função para apresentar uma String com a data e hora em formato DD/MM/AAAA HH:MM:SS
@@ -164,6 +134,7 @@ function armazenaMensagem(mensagem){
 	ultimas_mensagens.push(mensagem);
 }
 
+/*
 //da pra colocar em outro arquivo dps
 function funcaoStats(dadosStats, peers){
 	temp = new Object
@@ -171,12 +142,10 @@ function funcaoStats(dadosStats, peers){
 	if (peers == 'socket_test'){
 		 temp.userId=peers
 		 temp.dados=dadosStats
-		// console.log("P: ", peers)
-		// console.log("D: ", dadosStats)
 	}
 	 else {temp[peers] = dadosStats;
-	   //  console.log(peers)
 		
 	 }
 	 return temp
 }
+*/

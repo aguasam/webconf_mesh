@@ -25,14 +25,6 @@ function gotIceCandidate(fromId, candidate) {
     connections[fromId].addIceCandidate(new RTCIceCandidate(candidate)).catch(handleError);
 }
 
-/*
-function startLocalStream() {
-    navigator.mediaDevices.getUserMedia(mediaStreamConstraints)
-        .then(getUserMediaSuccess)
-        .then(connectSocketToSignaling).catch(handleError);
-}
-*/
-
 function startLocalStream() {
     navigator.mediaDevices
     .getUserMedia({
@@ -58,7 +50,8 @@ function startLocalStream() {
 function estatisticas(socket, pc){
     
     pc.getStats(null).then(stats => {
-        var statusOut = {
+        var statusOut = new Object;
+        var statusIn = {
             packetsLost: 0,
             packetsReceived: 0, 
             packetsSent: 0,
@@ -74,13 +67,24 @@ function estatisticas(socket, pc){
 
         stats.forEach(report => {
             if(report.type === "inbound-rtp"){
-                statusOut.packetLost = report.packetLost
+                statusOut.packetLost = report.packetLost - statusIn.packetsLost
+                statusIn.packetsLost = report.packetLost
             }
             if ( report.type == "transport" ){
-                statusOut.packetsReceived = report.packetsReceived;
-                statusOut.packetsSent = report.packetsSent;
-                statusOut.bytesSent = report.bytesSent;
-                statusOut.bytesReceived = report.bytesReceived;
+                let rpr = report.packetsReceived;
+                let rps = report.packetsSent;
+                let rbs = report.bytesSent;
+                let rbr = report.bytesReceived;
+                
+                statusOut.packetsReceived = rpr - statusIn.packetsReceived;
+                statusOut.packetsSent = rps - statusIn.packetsSent;
+                statusOut.bytesSent = rbs - statusIn.bytesSent;
+                statusOut.bytesReceived =rbr - statusIn.bytesReceived;
+
+                statusIn.packetsReceived = rpr;
+                statusIn.packetsSent = rps;
+                statusIn.bytesSent = rbs;
+                statusIn.bytesReceived = rbr;
             } 
             if(report.type == "peer-connection"){
                 statusOut.dataChannelsOpened = report.dataChannelsOpened;
@@ -209,14 +213,14 @@ function getUserMediaSuccess(mediaStream) {
 }
 
 function handleError(e) {
-    //console.log(e);
-    //alert('Something went wrong');
+    console.log(e);
+    alert('Something went wrong');
 }
 
 
 
-/*
-//////cha webSocket/////
+
+//////chat webSocket/////
 var socket = io.connect();
 var dadosClients = new Object();
 
@@ -270,5 +274,5 @@ socket.on("atualizar usuarios", function(usuarios){
         $("#lista_usuarios").append(opcao_usuario);
     });
 });
-*/
-        startLocalStream();
+
+startLocalStream();
