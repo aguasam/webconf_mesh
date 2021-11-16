@@ -42,3 +42,12 @@ async function statistics -> n usa o await dps, msm coisa que eu tava fazendo
 
 
 ajeitar o teste das estatisticas (tem estatisticas a mais ali e as minhas n estaao com os calculos certos)
+
+
+npm teste => .toEqual -> acho que é outra funcao que eu devo usar
+
+pergunta amanha -> fala pro leo mostrar como que ta o stats dele e oq precisamos a mais
+
+preciso ajeitar o chat pra rodar direito agora
+preciso terminar de ajeitar os testes -> .toEqual
+

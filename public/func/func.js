@@ -5,9 +5,11 @@ function funcaoStats(dadosStats, peers){
 	if (peers == 'socket_test'){
 		 temp.userId=peers
 		 temp.dados=dadosStats
-	}else temp[peers] = dadosStats;
-		
+	}else {temp[peers] = dadosStats;}
+	
+     //console.log(dadosStats)
 	 return temp
+
 }
 
 exports.funcaoStats = funcaoStats;

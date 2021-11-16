@@ -1,14 +1,16 @@
-const funcaoStats = require('./public/func/func.js');
+const {funcaoStats} = require('./public/func/func.js');
 const express = require('express');
 const server = express();
 const app = express();
 var http = require('http').Server(server); // Criando o servidor
 const io = require('socket.io')(http);
 //var fs = require('fs'); // Sistema de arquivos
+var usuarios = [];
 var stats = []
+let ultimas_mensagens = [];
 const HOST = '0.0.0.0'
 
-app.use(express.static('public'));
+server.use(express.static('public'));
 app.use(express.json());
 
 server.get("/stats", function(req,res){	
@@ -52,6 +54,7 @@ io.on('connection', function (socket) {
 
 	socket.on('estatisticas', function(dados, userId) {
 		peers = userId
+		dadosStats = dados
 		stats = dados
 		funcaoStats(dadosStats, peers)
 	})
