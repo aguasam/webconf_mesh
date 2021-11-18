@@ -4,7 +4,6 @@ const server = express();
 const app = express();
 var http = require('http').Server(server); // Criando o servidor
 const io = require('socket.io')(http);
-//var fs = require('fs'); // Sistema de arquivos
 var usuarios = new Map();
 var stats = new Map();
 let ultimas_mensagens = [];
@@ -18,23 +17,6 @@ server.get("/stats", function(req,res){
 	if(obj == 0) return res.status(204).json();
 	res.json(obj);
 });
-/*
-//Pegando um usuário específico da sala + suas stats.
-server.get("/clients/:id", function(req,res){	
-	
-    let id = req.params; 
-	let obj = funcClientsId(usuários, stats, id);
-	if(obj == 0) return res.status(204).json();
-	res.json(obj);
-
-});
-*/
-/*
-server.get("/clients", function(req,res){
-    let obj = dados
-	res.json(obj);
-});
-*/
 
 //cria o servidor
 http.listen(3000,HOST, () => {  
@@ -108,28 +90,4 @@ io.on('connection', function (socket) {
     var dataFormatada =  hora + ":" + minuto;
     return dataFormatada;
    }
-/*
-// Função para guardar as mensagens e seu tipo na variável de ultimas mensagens
-function armazenaMensagem(mensagem){
-	if(ultimas_mensagens.length > 5){
-		ultimas_mensagens.shift();
-	}
-	ultimas_mensagens.push(mensagem);
-}
-*/
 
-/*
-//da pra colocar em outro arquivo dps
-function funcaoStats(dadosStats, peers){
-	temp = new Object
-
-	if (peers == 'socket_test'){
-		 temp.userId=peers
-		 temp.dados=dadosStats
-	}
-	 else {temp[peers] = dadosStats;
-		
-	 }
-	 return temp
-}
-*/

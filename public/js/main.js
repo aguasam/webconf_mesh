@@ -98,7 +98,7 @@ function estatisticas(socket, pc){
                 statusOut.totalEncodeTime = report.totalEncodeTime;
             }
         })
-        console.log(statusOut)
+        //console.log(statusOut)
         socket.emit('estatisticas', statusOut, socket.id)
     })
 };
@@ -106,7 +106,7 @@ function estatisticas(socket, pc){
 function createPC(socket, localStream, userId){
     const pc = new RTCPeerConnection(mediaStreamConstraints);
     pc.onicecandidate = () => {
-        if (event.candidate/* && (socket.id != userId)*/) {
+        if (event.candidate && (socket.id != userId)) {
             console.log(socket.id, ' Send Candidate to ', userId);
             socket.emit('candidate', { 
                 toId: userId,
