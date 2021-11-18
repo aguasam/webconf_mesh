@@ -67,8 +67,8 @@ function estatisticas(socket, pc){
 
         stats.forEach(report => {
             if(report.type === "inbound-rtp"){
-                statusOut.packetLost = report.packetLost - statusIn.packetsLost
-                statusIn.packetsLost = report.packetLost
+                statusOut.packetsLost = report.packetsLost - statusIn.packetsLost
+                statusIn.packetsLost = report.packetsLost
             }
             if ( report.type == "transport" ){
                 let rpr = report.packetsReceived;
@@ -224,55 +224,45 @@ function handleError(e) {
 var socket = io.connect();
 var dadosClients = new Object();
 
-// Ao enviar uma mensagem
-$("form#sala_chat").submit(function(e){
+$("form#chat").submit(function(e){     // Irá pegar a msg do input 
     e.preventDefault();
-
-    var mensagem = $(this).find("#texto_mensagem").val();
-    var usuario = $("#lista_usuarios").val(); // Usuário selecionado na lista lateral direita
-
-    // Evento acionado no servidor para o envio da mensagem
-    // junto com o nome do usuário selecionado da lista
-    socket.emit("enviar mensagem", {msg: mensagem, usu: usuario}, function(){
+    socket.emit("enviar mensagem", $(this).find("#texto_mensagem").val(), function(){ //vai mandar para o index.js
         $("form#chat #texto_mensagem").val("");
     });
-});
-
-// Resposta ao envio de mensagens do servidor
-socket.on("atualizar mensagens", function(dados){
-    var mensagem_formatada = $("<p />").text(dados.msg).addClass(dados.tipo);
-    $("#historico_mensagens").append(mensagem_formatada);
-});
-
-$("form#login").submit(function(e){
+     
+  });
+  
+  socket.on("atualizar mensagens", function(mensagem){    //Pega a msg escrita e mandar para o idex.js para madar pro historico
+    var mensagem_formatada = $("<p />").text(mensagem);
+    $("#historico_mensagens").append(mensagem_formatada); //Coloca a msg no historico
+  });
+  
+  $("form#login").submit(function(e){  //pagina antes do chat para colocar usuriario
     e.preventDefault();
-
-    // Evento enviado quando o usuário insere um apelido
-    socket.emit("entrar", $(this).find("#apelido").val(), function(valido){
+  
+    socket.emit("entrar", $(this).find("#apelido").val(), function(valido){ //Verifica se o usuario é valido
+        
+        
         if(valido){
-            // Caso não exista nenhum usuário com o mesmo nome, o painel principal é exibido
-            $("#acesso_usuario").hide();
-            $("#sala_chat").show();
-            $("conteudo_principal").show();
+            $("#acesso_usuario").hide();  // se for ele esconde a pagina de acesso
+            $("#sala_chat").show();         // e mostra o chat
         }else{
-            // Do contrário o campo de mensagens é limpo e é apresentado um alert
             $("#acesso_usuario").val("");
             alert("Nome já utilizado nesta sala");
         }
+        
     });
-});
-
-// Quando servidor enviar uma nova lista de usuários
-// o select é limpo e reinserida a opção Todos
-// junto de toda a lista de usuários.
-socket.on("atualizar usuarios", function(usuarios){
-    $("#lista_usuarios").empty();
+  });
+  
+  socket.on("atualizar usuarios", function(usuarios){ //manda na section os usuarios 
+    $("#lista_usuarios").empty();  
     $("#lista_usuarios").append("<option value=''>Todos</option>");
-
     $.each(usuarios, function(indice){
+
         var opcao_usuario = $("<option />").text(usuarios[indice]);
+        dadosClients.usuarios = usuarios
+        console.log("OP: ",usuarios)
         $("#lista_usuarios").append(opcao_usuario);
     });
-});
-
+  });
 startLocalStream();

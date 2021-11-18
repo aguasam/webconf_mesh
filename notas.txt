@@ -51,3 +51,18 @@ pergunta amanha -> fala pro leo mostrar como que ta o stats dele e oq precisamos
 preciso ajeitar o chat pra rodar direito agora
 preciso terminar de ajeitar os testes -> .toEqual
 
+eu tava usando a funcao sendById pra ver como que era esse ngc de estatisticas pra cada usuario separado
+pelo jeito deu um erro que n recebeu nada ali
+
+pesquisa map -> set, get
+
+pesquisa mock
+
+estuda seleniun
+
+
+finalemtne deu certo as estatisticas
+*as estatisticas ainda estao recbendo os dados errados
+-> packetLost / daChannelsOpened
+
+**A partir do parte de estatisticas é necessario saber usar map, async e arrow function
