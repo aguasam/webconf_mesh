@@ -22,3 +22,47 @@ await
 -> fazer mais estatiscas
 
 colocar as estatisticas em uma url
+
+ja entendi bem como pega as estatisticas ->
+agr falta colocar elas em uma pagina pra tornar a aplicacao mais restful
+
+duvidas: perguntar quais outras estatisticas a mais colocar aqui//ele sempre me falar que é
+pra colocar as que eu acho mais importantes
+
+upp -> colocar um switch ao de if
+
+duvida -> como que mostra as estatisticas
+
+
+tarefa -> usar os testes unitarios com o jest
+--> criar um teste para as estatisticas, colocando umas estatisticas fakes e vendo se funciona
+
+Codigo do luis
+async function statistics -> n usa o await dps, msm coisa que eu tava fazendo
+
+
+ajeitar o teste das estatisticas (tem estatisticas a mais ali e as minhas n estaao com os calculos certos)
+
+
+npm teste => .toEqual -> acho que é outra funcao que eu devo usar
+
+pergunta amanha -> fala pro leo mostrar como que ta o stats dele e oq precisamos a mais
+
+preciso ajeitar o chat pra rodar direito agora
+preciso terminar de ajeitar os testes -> .toEqual
+
+eu tava usando a funcao sendById pra ver como que era esse ngc de estatisticas pra cada usuario separado
+pelo jeito deu um erro que n recebeu nada ali
+
+pesquisa map -> set, get
+
+pesquisa mock
+
+estuda seleniun
+
+
+finalemtne deu certo as estatisticas
+*as estatisticas ainda estao recbendo os dados errados
+-> packetLost / daChannelsOpened
+
+**A partir do parte de estatisticas é necessario saber usar map, async e arrow function

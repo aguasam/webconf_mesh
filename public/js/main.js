@@ -25,14 +25,6 @@ function gotIceCandidate(fromId, candidate) {
     connections[fromId].addIceCandidate(new RTCIceCandidate(candidate)).catch(handleError);
 }
 
-/*
-function startLocalStream() {
-    navigator.mediaDevices.getUserMedia(mediaStreamConstraints)
-        .then(getUserMediaSuccess)
-        .then(connectSocketToSignaling).catch(handleError);
-}
-*/
-
 function startLocalStream() {
     navigator.mediaDevices
     .getUserMedia({
@@ -55,26 +47,66 @@ function startLocalStream() {
   
 }
 
-async function estatisticas(pc){
+function estatisticas(socket, pc){
     
     pc.getStats(null).then(stats => {
-        var statusOut = " ";
+        var statusOut = new Object;
+        var statusIn = {
+            packetsLost: 0,
+            packetsReceived: 0, 
+            packetsSent: 0,
+            bytesSent: 0,
+            bytesReceived: 0,
+            dataChannelsOpened: 0,
+            dataChannelsClosed: 0,
+            remoteCandidateId: null,
+            localCandidateId: null,
+            totalEncodeTime: 0, 
+      
+        };
 
         stats.forEach(report => {
             if(report.type === "inbound-rtp"){
-                Object.keys(report).forEach(statName => {
-                    statusOut += `${statName}: ${report[statName]}\n`;
-                })
+                statusOut.packetsLost = report.packetsLost - statusIn.packetsLost
+                statusIn.packetsLost = report.packetsLost
+            }
+            if ( report.type == "transport" ){
+                let rpr = report.packetsReceived;
+                let rps = report.packetsSent;
+                let rbs = report.bytesSent;
+                let rbr = report.bytesReceived;
+                
+                statusOut.packetsReceived = rpr - statusIn.packetsReceived;
+                statusOut.packetsSent = rps - statusIn.packetsSent;
+                statusOut.bytesSent = rbs - statusIn.bytesSent;
+                statusOut.bytesReceived =rbr - statusIn.bytesReceived;
+
+                statusIn.packetsReceived = rpr;
+                statusIn.packetsSent = rps;
+                statusIn.bytesSent = rbs;
+                statusIn.bytesReceived = rbr;
+            } 
+            if(report.type == "peer-connection"){
+                statusOut.dataChannelsOpened = report.dataChannelsOpened;
+                statusOut.dataChannelsClosed = report.dataChannelsClosed;
+            }
+            if(report.type == "candidate-pair"){
+                statusOut.localCandidateId = report.localCandidateId;
+                statusOut.remoteCandidateId = report.remoteCandidateId;
+            }
+            if(report.type == "outbound-rtp"){
+                statusOut.totalEncodeTime = report.totalEncodeTime;
             }
         })
-        console.log(statusOut)
+        //console.log(statusOut)
+        socket.emit('estatisticas', statusOut, socket.id)
     })
 };
 
 function createPC(socket, localStream, userId){
     const pc = new RTCPeerConnection(mediaStreamConstraints);
     pc.onicecandidate = () => {
-        if (event.candidate/* && (socket.id != userId)*/) {
+        if (event.candidate && (socket.id != userId)) {
             console.log(socket.id, ' Send Candidate to ', userId);
             socket.emit('candidate', { 
                 toId: userId,
@@ -90,11 +122,11 @@ function createPC(socket, localStream, userId){
     };
     connections[userId].addStream(localStream);
 
-    //////////////////////////////////////////   
+    /////estats/////
     setInterval(() => {
-        this.estatisticas(pc);
+        this.estatisticas(socket, pc);
       },1000)
-
+    ///////////////
     return pc;
 }
 
@@ -110,7 +142,6 @@ function connectSocketToSignaling() {
             console.log(joinedUserId, ' joined');
             const fromId = data.fromId;
 
-            //como que configurou esse if
             userId = joinedUserId
             if(joinedUserId != localUserId){
                 connections[userId] = createPC(socket, localStream, joinedUserId)
@@ -182,62 +213,56 @@ function getUserMediaSuccess(mediaStream) {
 }
 
 function handleError(e) {
-    //console.log(e);
-    //alert('Something went wrong');
+    console.log(e);
+    alert('Something went wrong');
 }
 
 
+
+
+//////chat webSocket/////
+var socket = io.connect();
+var dadosClients = new Object();
+
+$("form#chat").submit(function(e){     // Irá pegar a msg do input 
+    e.preventDefault();
+    socket.emit("enviar mensagem", $(this).find("#texto_mensagem").val(), function(){ //vai mandar para o index.js
+        $("form#chat #texto_mensagem").val("");
+    });
+     
+  });
+  
+  socket.on("atualizar mensagens", function(mensagem){    //Pega a msg escrita e mandar para o idex.js para madar pro historico
+    var mensagem_formatada = $("<p />").text(mensagem);
+    $("#historico_mensagens").append(mensagem_formatada); //Coloca a msg no historico
+  });
+  
+  $("form#login").submit(function(e){  //pagina antes do chat para colocar usuriario
+    e.preventDefault();
+  
+    socket.emit("entrar", $(this).find("#apelido").val(), function(valido){ //Verifica se o usuario é valido
+        
+        
+        if(valido){
+            $("#acesso_usuario").hide();  // se for ele esconde a pagina de acesso
+            $("#sala_chat").show();         // e mostra o chat
+        }else{
+            $("#acesso_usuario").val("");
+            alert("Nome já utilizado nesta sala");
+        }
+        
+    });
+  });
+  
+  socket.on("atualizar usuarios", function(usuarios){ //manda na section os usuarios 
+    $("#lista_usuarios").empty();  
+    $("#lista_usuarios").append("<option value=''>Todos</option>");
+    $.each(usuarios, function(indice){
+
+        var opcao_usuario = $("<option />").text(usuarios[indice]);
+        dadosClients.usuarios = usuarios
+        console.log("OP: ",usuarios)
+        $("#lista_usuarios").append(opcao_usuario);
+    });
+  });
 startLocalStream();
-
-/*
-//////cha webSocket/////
-        // Ao enviar uma mensagem
-		$("form#sala_chat").submit(function(e){
-			e.preventDefault();
-
-			var mensagem = $(this).find("#texto_mensagem").val();
-			var usuario = $("#lista_usuarios").val(); // Usuário selecionado na lista lateral direita
-
-			// Evento acionado no servidor para o envio da mensagem
-			// junto com o nome do usuário selecionado da lista
-			socket.emit("enviar mensagem", {msg: mensagem, usu: usuario}, function(){
-				$("form#chat #texto_mensagem").val("");
-			});
-		});
-
-		// Resposta ao envio de mensagens do servidor
-		socket.on("atualizar mensagens", function(dados){
-			var mensagem_formatada = $("<p />").text(dados.msg).addClass(dados.tipo);
-			$("#historico_mensagens").append(mensagem_formatada);
-		});
-
-		$("form#login").submit(function(e){
-			e.preventDefault();
-
-			// Evento enviado quando o usuário insere um apelido
-			socket.emit("entrar", $(this).find("#apelido").val(), function(valido){
-				if(valido){
-					// Caso não exista nenhum usuário com o mesmo nome, o painel principal é exibido
-					$("#acesso_usuario").hide();
-					$("#sala_chat").show();
-                    $("conteudo_principal").show();
-				}else{
-					// Do contrário o campo de mensagens é limpo e é apresentado um alert
-					$("#acesso_usuario").val("");
-					alert("Nome já utilizado nesta sala");
-				}
-			});
-		});
-
-		// Quando servidor enviar uma nova lista de usuários
-		// o select é limpo e reinserida a opção Todos
-		// junto de toda a lista de usuários.
-		socket.on("atualizar usuarios", function(usuarios){
-			$("#lista_usuarios").empty();
-			$("#lista_usuarios").append("<option value=''>Todos</option>");
-				$.each(usuarios, function(indice){
-					var opcao_usuario = $("<option />").text(usuarios[indice]);
-					$("#lista_usuarios").append(opcao_usuario);
-			});
-		});
-*/
