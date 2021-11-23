@@ -230,14 +230,14 @@ $("form#chat").submit(function(e){     // Irá pegar a msg do input
         $("form#chat #texto_mensagem").val("");
     });
      
-  });
+});
   
-  socket.on("atualizar mensagens", function(mensagem){    //Pega a msg escrita e mandar para o idex.js para madar pro historico
+socket.on("atualizar mensagens", function(mensagem){    //Pega a msg escrita e mandar para o idex.js para madar pro historico
     var mensagem_formatada = $("<p />").text(mensagem);
     $("#historico_mensagens").append(mensagem_formatada); //Coloca a msg no historico
-  });
+});
   
-  $("form#login").submit(function(e){  //pagina antes do chat para colocar usuriario
+$("form#login").submit(function(e){  //pagina antes do chat para colocar usuriario
     e.preventDefault();
   
     socket.emit("entrar", $(this).find("#apelido").val(), function(valido){ //Verifica se o usuario é valido
@@ -252,17 +252,18 @@ $("form#chat").submit(function(e){     // Irá pegar a msg do input
         }
         
     });
-  });
+});
   
-  socket.on("atualizar usuarios", function(usuarios){ //manda na section os usuarios 
+socket.on("atualizar usuarios", function(usuarios){ //manda na section os usuarios 
     $("#lista_usuarios").empty();  
     $("#lista_usuarios").append("<option value=''>Todos</option>");
     $.each(usuarios, function(indice){
 
         var opcao_usuario = $("<option />").text(usuarios[indice]);
         dadosClients.usuarios = usuarios
-        console.log("OP: ",usuarios)
+        //console.log("OP: ",usuarios)
         $("#lista_usuarios").append(opcao_usuario);
     });
-  });
+});
+
 startLocalStream();

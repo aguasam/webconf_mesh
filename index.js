@@ -1,4 +1,4 @@
-const {funcaoStats, funcClientsId, armazenaMensagem} = require('./public/func/func.js');
+const {funcaoStats, pegarDataAtual, funcClientsId, armazenaMensagem} = require('./public/func/func.js');
 const express = require('express');
 const server = express();
 const app = express();
@@ -81,13 +81,4 @@ io.on('connection', function (socket) {
       });
 });
   
-  function pegarDataAtual(){
-    var dataAtual = new Date();
-    var hora = (dataAtual.getHours()<10 ? '0' : '') + dataAtual.getHours();
-    var minuto = (dataAtual.getMinutes()<10 ? '0' : '') + dataAtual.getMinutes();
-    
-   
-    var dataFormatada =  hora + ":" + minuto;
-    return dataFormatada;
-   }
-
+  
