@@ -66,3 +66,11 @@ finalemtne deu certo as estatisticas
 -> packetLost / daChannelsOpened
 
 **A partir do parte de estatisticas é necessario saber usar map, async e arrow function
+
+
+perguntas -> é pra usar o seleniun IDE ou o webdriver/grid
+          -> msg de erro
+          Uncaught (in promise) DOMException: Failed to execute 'setRemoteDescription' on 'RTCPeerConnection': Failed to set remote answer sdp: Called in wrong state: stable
+
+          -> msg de erro quando alguem sai da sala
+          Uncaught TypeError: Cannot read properties of null (reading 'parentNode')
