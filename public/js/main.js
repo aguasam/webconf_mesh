@@ -133,6 +133,16 @@ function createPC(socket, localStream, userId){
 //connectSOcketToSignaling
 function connectSocketToSignaling() {
     const socket = io.connect('http://localhost:3000', { secure: true });
+    var dadosClients = new Object();
+
+$("form#chat").submit(function(e){     // Irá pegar a msg do input 
+    e.preventDefault();
+    socket.emit("enviar mensagem", $(this).find("#texto_mensagem").val(), function(){ //vai mandar para o index.js
+        $("form#chat #texto_mensagem").val("");
+    });  
+});
+
+////////////////////////////////////////////////////////////////////////////
     socket.on('connect', () => {
         localUserId = socket.id;
         console.log('localUser', localUserId);
@@ -161,7 +171,7 @@ function connectSocketToSignaling() {
                 let video = document.querySelector('[data-socket="'+ userId +'"]');
                 video.parentNode.removeChild(video);
                 //printa connection
-                console.log(connections[userId] + ' left')
+                console.log(userId + ' left')
                 //remove o connection
                 delete connections[userId];
             });
@@ -203,9 +213,51 @@ function connectSocketToSignaling() {
 
         });
     })
+//////////////////////////////////////////////////////////////////////////////////////
+
+    socket.on("atualizar mensagens", function(mensagem){    //Pega a msg escrita e mandar para o idex.js para madar pro historico
+        var mensagem_formatada = $("<p />").text(mensagem);
+        $("#historico_mensagens").append(mensagem_formatada); //Coloca a msg no historico
+    });
+      
+    $("form#login").submit(function(e){  //pagina antes do chat para colocar usuriario
+        e.preventDefault();
+      
+        socket.emit("entrar", $(this).find("#apelido").val(), function(valido){ //Verifica se o usuario é valido
+            
+            
+            if(valido){
+                $("#acesso_usuario").hide();  // se for ele esconde a pagina de acesso
+                $("#sala_chat").show();         // e mostra o chat
+            }else{
+                $("#acesso_usuario").val("");
+                alert("Nome já utilizado nesta sala");
+            }
+            
+        });
+    });
+      
+    socket.on("atualizar usuarios", function(usuarios){ //manda na section os usuarios 
+        $("#lista_usuarios").empty();  
+        $("#lista_usuarios").append("<option value=''>Todos</option>");
+        $.each(usuarios, function(indice){
+    
+            var opcao_usuario = $("<option />").text(usuarios[indice]);
+            dadosClients.usuarios = usuarios
+            //console.log("OP: ",usuarios)
+            $("#lista_usuarios").append(opcao_usuario);
+        });
+    });
 }
 
 /////END/////
+
+/*
+//////chat webSocket/////
+var socket = io.connect();
+*/
+  
+
 
 function getUserMediaSuccess(mediaStream) {
     localStream = mediaStream;
@@ -216,54 +268,5 @@ function handleError(e) {
     console.log(e);
     alert('Something went wrong');
 }
-
-
-
-
-//////chat webSocket/////
-var socket = io.connect();
-var dadosClients = new Object();
-
-$("form#chat").submit(function(e){     // Irá pegar a msg do input 
-    e.preventDefault();
-    socket.emit("enviar mensagem", $(this).find("#texto_mensagem").val(), function(){ //vai mandar para o index.js
-        $("form#chat #texto_mensagem").val("");
-    });
-     
-});
-  
-socket.on("atualizar mensagens", function(mensagem){    //Pega a msg escrita e mandar para o idex.js para madar pro historico
-    var mensagem_formatada = $("<p />").text(mensagem);
-    $("#historico_mensagens").append(mensagem_formatada); //Coloca a msg no historico
-});
-  
-$("form#login").submit(function(e){  //pagina antes do chat para colocar usuriario
-    e.preventDefault();
-  
-    socket.emit("entrar", $(this).find("#apelido").val(), function(valido){ //Verifica se o usuario é valido
-        
-        
-        if(valido){
-            $("#acesso_usuario").hide();  // se for ele esconde a pagina de acesso
-            $("#sala_chat").show();         // e mostra o chat
-        }else{
-            $("#acesso_usuario").val("");
-            alert("Nome já utilizado nesta sala");
-        }
-        
-    });
-});
-  
-socket.on("atualizar usuarios", function(usuarios){ //manda na section os usuarios 
-    $("#lista_usuarios").empty();  
-    $("#lista_usuarios").append("<option value=''>Todos</option>");
-    $.each(usuarios, function(indice){
-
-        var opcao_usuario = $("<option />").text(usuarios[indice]);
-        dadosClients.usuarios = usuarios
-        //console.log("OP: ",usuarios)
-        $("#lista_usuarios").append(opcao_usuario);
-    });
-});
 
 startLocalStream();
