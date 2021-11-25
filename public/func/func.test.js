@@ -1,4 +1,5 @@
 
+
 const {funcaoStats, armazenaMensagem, funcClientsId} = require('../func/func');
 
 it('estatisticas', ()=>{
