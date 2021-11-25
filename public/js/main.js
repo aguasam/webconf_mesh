@@ -7,7 +7,7 @@ const offerOptions = {
 const localVideo = document.getElementById('localVideo');
 let localStream;
 let localUserId;
-let connections = [];
+let connections = new Map();
 
 function gotRemoteStream(event, userId) {
 
@@ -22,7 +22,8 @@ function gotRemoteStream(event, userId) {
 }
 
 function gotIceCandidate(fromId, candidate) {
-    connections[fromId].addIceCandidate(new RTCIceCandidate(candidate)).catch(handleError);
+    connections.get(fromId)
+    .addIceCandidate(new RTCIceCandidate(candidate)).catch(handleError);
 }
 
 function startLocalStream() {
@@ -47,8 +48,20 @@ function startLocalStream() {
   
 }
 
-function estatisticas(socket, pc){
+async function creatingOfferFunction(pc, joinedUserId, socket){
+    let description = await pc.createOffer();
+
+    await pc.setLocalDescription(description);
     
+    console.log(socket.id, " Send offer to ", joinedUserId);
+    socket.emit("offer", {
+      type: "offer",
+      toId: joinedUserId,
+      description: pc.localDescription,  
+    });
+  };
+
+function estatisticas(socket, pc){
     pc.getStats(null).then(stats => {
         var statusOut = new Object;
         var statusIn = {
@@ -103,7 +116,7 @@ function estatisticas(socket, pc){
     })
 };
 
-function createPC(socket, localStream, userId){
+function createPC(socket, userId, localStream){
     const pc = new RTCPeerConnection(mediaStreamConstraints);
     pc.onicecandidate = () => {
         if (event.candidate && (socket.id != userId)) {
@@ -115,12 +128,10 @@ function createPC(socket, localStream, userId){
         }
     }
 
-    connections[userId] = pc
-
-    connections[userId].onaddstream = () => {
+    pc.onaddstream = () => {
         gotRemoteStream(event, userId);
     };
-    connections[userId].addStream(localStream);
+    pc.addStream(localStream);
 
     /////estats/////
     setInterval(() => {
@@ -148,12 +159,24 @@ $("form#chat").submit(function(e){     // Irá pegar a msg do input
         console.log('localUser', localUserId);
         
         socket.on('user-joined', (data) => {
-            const clients = data.clients;
             const joinedUserId = data.joinedUserId;
             console.log(joinedUserId, ' joined');
-            const fromId = data.fromId;
 
-            userId = joinedUserId
+            const clients = data.clients;
+            const fromId = data.fromId;
+            const userId = joinedUserId
+
+            if (userId != socket.id) {
+          
+                const pc = createPC(socket, joinedUserId, localStream);
+
+                connections.set(userId, pc);
+
+                creatingOfferFunction(connections.get(userId) , joinedUserId, socket);
+            }
+
+        });
+            /*
             if(joinedUserId != localUserId){
                 connections[userId] = createPC(socket, localStream, joinedUserId)
                 connections[joinedUserId].createOffer(offerOptions).then((description) => {
@@ -166,24 +189,28 @@ $("form#chat").submit(function(e){     // Irá pegar a msg do input
                     }).catch(handleError);
                 });
             }
-
+            */
             /////////saida/////////
             socket.on('user-left', (userId) => {
+
                 if(document.querySelector('[data-socket="'+ userId +'"]')){
                     let video = document.querySelector('[data-socket="'+ userId +'"]');
                     video.parentNode.removeChild(video);
                 }
-               // this.emit("user-left", userId);
-                //this.remoteStreams.delete(userId.id);
-                //printa connection
+
+                if (userId == socket.id){
+                    connections.forEach(user => {
+                      connections.delete(user);
+                    })
+                }else connections.delete(userId);
+
                 console.log(userId + ' left')
-                //remove o connection
-                delete connections[userId];
             });
             ////////////////////////
             socket.on('candidate', (data) => {
                 const fromId = data.fromId;
                 console.log(socket.id, ' Receive Candidate from ', fromId);
+
                 if (data.candidate) {
                     gotIceCandidate(fromId, data.candidate);
                 }
@@ -191,32 +218,40 @@ $("form#chat").submit(function(e){     // Irá pegar a msg do input
             
             socket.on('offer', (data) => {
                 const fromId = data.fromId;
+                userId = socket.id
                 if (data.description) {
-                    connections[fromId] = createPC(socket, localStream, userId)
-                    console.log(socket.id, ' Receive offer from ', fromId);
-                    connections[fromId].setRemoteDescription(new RTCSessionDescription(data.description))
-                    connections[fromId].createAnswer()
+                    connections.set(fromId, createPC(socket,  userId, localStream));
+
+                    const connection = connections.get(fromId);
+                    console.log(socket.id, " Receive offer from ", fromId);
+                    connection.setRemoteDescription(
+                        new RTCSessionDescription(data.description)
+                    );
+
+                    connection.createAnswer()
                     .then((description) => {
-                            return connections[fromId].setLocalDescription(description)
+                        return connection.setLocalDescription(description);
                     })
                     .then(() => {
-                        console.log(socket.id, ' Send answer to ', fromId);
-                        socket.emit('answer', {
-                            toId: fromId,
-                             description: connections[fromId].localDescription
+                        socket.emit("answer", {
+                        toId: fromId,
+                        description: connection.localDescription,
                         });
                     })
-                    .catch(handleError);
-                }
-            });
-
+                    .catch((e) => console.log("Error: ", e));
+                    }
+                });
+                
             socket.on('answer', (data) => {
                 const fromId = data.fromId;
                 console.log(socket.id, ' Receive answer from ', fromId);
-                connections[fromId].setRemoteDescription(new RTCSessionDescription(data.description))
+                const connection = connections.get(fromId);
+                connection
+                .setRemoteDescription(new RTCSessionDescription(data.description))
+                .catch((e) => console.log("Error: ", e));
             });
 
-        });
+        
     })
 //////////////////////////////////////////////////////////////////////////////////////
 
