@@ -25,18 +25,21 @@ const getCapabilities = (browserName) => {
 //Func que abre os dois peers para a execução dos testes.
 async function peers (){
     //Abrindo chrome e firefox
+    const sleep = ms => new Promise(res => setTimeout(res, ms));
     driver1 = await new Builder().withCapabilities(getCapabilities('chrome')).build();
     await driver1.get('http://localhost:3000/');
-    //await sleep(1000);
+    await sleep(1000);
     await driver1.findElement(By.name('apelido')).sendKeys('carlof', Key.RETURN);
 
 
     driver2 = await new Builder().withCapabilities(getCapabilities('chrome')).build();
     await driver2.get('http://localhost:3000/');
-    //await sleep(1000);
+    await sleep(1000);
 
     await driver2.findElement(By.name('apelido')).sendKeys('aguasam ', Key.RETURN);
     //await driver2.findElement(By.name('apertar')).click();
+
+    //coloca o http://localhost:3000/statsw
 
     return [driver1, driver2]
 
