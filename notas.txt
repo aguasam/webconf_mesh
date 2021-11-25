@@ -70,7 +70,16 @@ finalemtne deu certo as estatisticas
 
 perguntas -> é pra usar o seleniun IDE ou o webdriver/grid
           -> msg de erro
-          Uncaught (in promise) DOMException: Failed to execute 'setRemoteDescription' on 'RTCPeerConnection': Failed to set remote answer sdp: Called in wrong state: stable
+          Uncaught (in promise) DOMException: Failed to execute 'setRemoteDescription' on 
+          'RTCPeerConnection': Failed to set remote answer sdp: Called in wrong state: stable
 
           -> msg de erro quando alguem sai da sala
           Uncaught TypeError: Cannot read properties of null (reading 'parentNode')
+
+colocar a parte de deletar stats
+
+tirar o erro do stable 
+
+tirar o erro de quando fecha uma camera => {
+    https://stackoverflow.com/questions/22492485/javascript-error-cannot-read-property-parentnode-of-null/22492596
+}

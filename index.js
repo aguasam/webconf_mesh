@@ -31,7 +31,8 @@ server.get('/', function(req, res){
 io.on('connection', function (socket) {
     /////voIP webRTC/////
 	io.sockets.emit('user-joined', { clients:  Object.keys(io.sockets.clients().sockets), count: io.engine.clientsCount, joinedUserId: socket.id});
-	socket.on('candidate', function(data) {
+	
+    socket.on('candidate', function(data) {
         io.to(data.toId).emit('candidate', { fromId: socket.id, ...data });
     });
     socket.on('offer', function(data) {
@@ -44,17 +45,20 @@ io.on('connection', function (socket) {
 
     socket.on('disconnect', function() {
         io.sockets.emit('user-left', socket.id)
+        delete usuarios[socket.apelido];
+        usuarios.delete(socket.apelido); 
+		stats.delete(socket.id);
+
+        io.sockets.emit("atualizar usuarios", Object.keys(usuarios));
+        io.sockets.emit("atualizar mensagens", " " + pegarDataAtual() + " " + socket.apelido + " saiu da sala");
     })
 
 	socket.on('estatisticas', function(dados, userId) {
 		peers = userId
-		//dadosStats = dados
 		stats.set(userId, dados)
-		//funcaoStats(dadosStats, peers)
 	})
 
     /////chat websocket/////
-	
     socket.on("entrar", function(apelido, callback){
         if(!(apelido in usuarios)){
             socket.apelido = apelido; 
@@ -69,16 +73,12 @@ io.on('connection', function (socket) {
             callback(false);
         }
         });
+        
     socket.on("enviar mensagem", function(mensagem_enviada, callback){  //envia a msg que irá pro historico de msg
         mensagem_enviada = " " + pegarDataAtual() + " " + socket.apelido+ ": " +  mensagem_enviada;
         io.sockets.emit("atualizar mensagens", mensagem_enviada);
         callback();
     });
-    socket.on("disconnect", function(){    //quando o usuario sai da pagina
-        delete usuarios[socket.apelido];
-        io.sockets.emit("atualizar usuarios", Object.keys(usuarios));
-        io.sockets.emit("atualizar mensagens", " " + pegarDataAtual() + " " + socket.apelido + " saiu da sala");
-      });
 });
   
   

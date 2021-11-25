@@ -146,6 +146,7 @@ $("form#chat").submit(function(e){     // Irá pegar a msg do input
     socket.on('connect', () => {
         localUserId = socket.id;
         console.log('localUser', localUserId);
+        
         socket.on('user-joined', (data) => {
             const clients = data.clients;
             const joinedUserId = data.joinedUserId;
@@ -168,8 +169,12 @@ $("form#chat").submit(function(e){     // Irá pegar a msg do input
 
             /////////saida/////////
             socket.on('user-left', (userId) => {
-                let video = document.querySelector('[data-socket="'+ userId +'"]');
-                video.parentNode.removeChild(video);
+                if(document.querySelector('[data-socket="'+ userId +'"]')){
+                    let video = document.querySelector('[data-socket="'+ userId +'"]');
+                    video.parentNode.removeChild(video);
+                }
+               // this.emit("user-left", userId);
+                //this.remoteStreams.delete(userId.id);
                 //printa connection
                 console.log(userId + ' left')
                 //remove o connection
@@ -251,13 +256,6 @@ $("form#chat").submit(function(e){     // Irá pegar a msg do input
 }
 
 /////END/////
-
-/*
-//////chat webSocket/////
-var socket = io.connect();
-*/
-  
-
 
 function getUserMediaSuccess(mediaStream) {
     localStream = mediaStream;
