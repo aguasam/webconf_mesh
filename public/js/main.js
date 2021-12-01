@@ -8,6 +8,8 @@ const localVideo = document.getElementById('localVideo');
 let localStream;
 let localUserId;
 let connections = new Map();
+let remoteStreams = new Map();
+
 
 function gotRemoteStream(event, userId) {
 
@@ -29,7 +31,7 @@ function gotIceCandidate(fromId, candidate) {
 function startLocalStream() {
     navigator.mediaDevices
     .getUserMedia({
-      //audio: true,
+      audio: true,
       video: true
       //{ width: 800, height: 600 } -> Ja tive que especificar por causa do firefox.
     })
@@ -37,12 +39,7 @@ function startLocalStream() {
       localStream = mediaStream;
       localVideo.srcObject = mediaStream;
 
-      //emit("localStream", mediaStream);
       connectSocketToSignaling(mediaStream);
-      console.log("Pegando userMedia com constraints:", {
-        video: true,
-        audio: true,
-      });
     })
     .catch((e) => console.log("Error: ", e));
   
@@ -116,22 +113,50 @@ function estatisticas(socket, pc){
     })
 };
 
-function createPC(socket, userId, localStream){
+function createPC(socket, userId, mediaStream){
     const pc = new RTCPeerConnection(mediaStreamConstraints);
-    pc.onicecandidate = () => {
-        if (event.candidate && (socket.id != userId)) {
-            console.log(socket.id, ' Send Candidate to ', userId);
-            socket.emit('candidate', { 
-                toId: userId,
-                candidate: event.candidate, 
-            });
-        }
-    }
+    let track = 0;
 
+    pc.onicecandidate = () => {
+      if (event.candidate) {
+        console.log(socket.id, ' Send Candidate to ', userId);
+        socket.emit('candidate', {
+        toId: userId,
+        candidate: event.candidate,
+        });
+      }
+    }
+/*
+    pc.ontrack = (evt) => {
+        // add the first track to my corresponding user.
+        const remoteStream = remoteStreams.get(userId);
+        if (remoteStream) {
+          remoteStream.addTrack(evt.track);
+          track = 1;
+        }
+        
+        // add the second track to my corresponding user.
+        else {
+          const remoteStream = new MediaStream;
+          emit("remoteStream", { stream: remoteStream, id: userId });
+          remoteStream.addTrack(evt.track);
+          remoteStreams.set(userId, remoteStream);
+  
+        }
+      };
+  
+      // track receives objects of type MediaStreamTrack from the returned array
+      // by .getTracks. This addTrack function "calls" onTrack.
+      for (const track of mediaStream.getTracks()) {
+        pc.addTrack(track);
+      }
+*/
     pc.onaddstream = () => {
         gotRemoteStream(event, userId);
     };
-    pc.addStream(localStream);
+    pc.addStream(mediaStream);
+
+    connections.set(userId, pc);
 
     /////estats/////
     setInterval(() => {
@@ -142,32 +167,22 @@ function createPC(socket, userId, localStream){
 }
 
 //connectSOcketToSignaling
-function connectSocketToSignaling() {
+function connectSocketToSignaling(mediaStream) {
     const socket = io.connect('http://localhost:3000', { secure: true });
-    var dadosClients = new Object();
 
-$("form#chat").submit(function(e){     // Irá pegar a msg do input 
-    e.preventDefault();
-    socket.emit("enviar mensagem", $(this).find("#texto_mensagem").val(), function(){ //vai mandar para o index.js
-        $("form#chat #texto_mensagem").val("");
-    });  
-});
-
-////////////////////////////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////////
     socket.on('connect', () => {
-        localUserId = socket.id;
-        console.log('localUser', localUserId);
-        
+    localUserId = socket.id;
+    console.log('localUser', localUserId);
+    
         socket.on('user-joined', (data) => {
             const joinedUserId = data.joinedUserId;
             console.log(joinedUserId, ' joined');
 
-            const clients = data.clients;
-            const fromId = data.fromId;
             const userId = joinedUserId
 
             if (userId != socket.id) {
-          
+            
                 const pc = createPC(socket, joinedUserId, localStream);
 
                 connections.set(userId, pc);
@@ -176,126 +191,152 @@ $("form#chat").submit(function(e){     // Irá pegar a msg do input
             }
 
         });
-            /*
-            if(joinedUserId != localUserId){
-                connections[userId] = createPC(socket, localStream, joinedUserId)
-                connections[joinedUserId].createOffer(offerOptions).then((description) => {
-                    connections[joinedUserId].setLocalDescription(description).then(() => {
-                        console.log(socket.id, ' Send offer to ', joinedUserId);
-                        socket.emit('offer', {
-                            toId: joinedUserId,
-                            description: connections[joinedUserId].localDescription,
-                        });
-                    }).catch(handleError);
-                });
+
+        socket.on('user-left', (userId) => {
+            remoteStreams.delete(userId.id);
+            
+            if(document.querySelector('[data-socket="'+ userId +'"]')){
+                let video = document.querySelector('[data-socket="'+ userId +'"]');
+                video.parentNode.removeChild(video);
             }
-            */
-            /////////saida/////////
-            socket.on('user-left', (userId) => {
+            
+            if (userId == socket.id){
+                connections.forEach(user => {
+                    connections.delete(user);
+                })
+            }else connections.delete(userId);
 
-                if(document.querySelector('[data-socket="'+ userId +'"]')){
-                    let video = document.querySelector('[data-socket="'+ userId +'"]');
-                    video.parentNode.removeChild(video);
-                }
+            console.log(userId + ' left')
+        });
 
-                if (userId == socket.id){
-                    connections.forEach(user => {
-                      connections.delete(user);
-                    })
-                }else connections.delete(userId);
+        socket.on('candidate', (data) => {
+            const fromId = data.fromId;
+            console.log(socket.id, ' Receive Candidate from ', fromId);
 
-                console.log(userId + ' left')
-            });
-            ////////////////////////
-            socket.on('candidate', (data) => {
-                const fromId = data.fromId;
-                console.log(socket.id, ' Receive Candidate from ', fromId);
+            if (data.candidate) {
+                gotIceCandidate(fromId, data.candidate);
+            }
+        });
+        
+        socket.on('offer', (data) => {
+            const fromId = data.fromId;
+            //userId = socket.id
+            if (data.description) {
+                connections.set(fromId, createPC(socket,  fromId, localStream));
 
-                if (data.candidate) {
-                    gotIceCandidate(fromId, data.candidate);
+                const connection = connections.get(fromId);
+                console.log(socket.id, " Receive offer from ", fromId);
+                connection.setRemoteDescription(
+                    new RTCSessionDescription(data.description)
+                );
+
+                connection.createAnswer()
+                .then((description) => {
+                    return connection.setLocalDescription(description);
+                })
+                .then(() => {
+                    socket.emit("answer", {
+                    toId: fromId,
+                    description: connection.localDescription,
+                    });
+                })
+                .catch((e) => console.log("Error: ", e));
                 }
             });
             
-            socket.on('offer', (data) => {
-                const fromId = data.fromId;
-                userId = socket.id
-                if (data.description) {
-                    connections.set(fromId, createPC(socket,  userId, localStream));
-
-                    const connection = connections.get(fromId);
-                    console.log(socket.id, " Receive offer from ", fromId);
-                    connection.setRemoteDescription(
-                        new RTCSessionDescription(data.description)
-                    );
-
-                    connection.createAnswer()
-                    .then((description) => {
-                        return connection.setLocalDescription(description);
-                    })
-                    .then(() => {
-                        socket.emit("answer", {
-                        toId: fromId,
-                        description: connection.localDescription,
-                        });
-                    })
-                    .catch((e) => console.log("Error: ", e));
-                    }
-                });
-                
-            socket.on('answer', (data) => {
-                const fromId = data.fromId;
-                console.log(socket.id, ' Receive answer from ', fromId);
-                const connection = connections.get(fromId);
-                connection
-                .setRemoteDescription(new RTCSessionDescription(data.description))
-                .catch((e) => console.log("Error: ", e));
-            });
-
-        
+        socket.on('answer', (data) => {
+            const fromId = data.fromId;
+            console.log(socket.id, ' Receive answer from ', fromId);
+            const connection = connections.get(fromId);
+            
+            connection
+            .setRemoteDescription(new RTCSessionDescription(data.description))
+            .catch((e) => console.log("Error: ", e));
+        });
     })
-//////////////////////////////////////////////////////////////////////////////////////
+    /////////////////////////////////////////////////////////////////////////////////////
 
-    socket.on("atualizar mensagens", function(mensagem){    //Pega a msg escrita e mandar para o idex.js para madar pro historico
-        var mensagem_formatada = $("<p />").text(mensagem);
-        $("#historico_mensagens").append(mensagem_formatada); //Coloca a msg no historico
+    var form = document.getElementById("chat");
+    form.addEventListener("submit", (event) => {
+        event.preventDefault();
+        var mensagem = document.getElementById("texto_mensagem").value;
+        var usuário = document.getElementById("lista_usuarios").value; // Usuário selecionado na lista lateral direita
+
+        // Evento acionado no servidor para o envio da mensagem
+        // junto com o nome do usuário selecionado da lista
+        socket.emit( "enviar_mensagem", { msg: mensagem, usu: usuário }, () => {
+            document.getElementById("texto_mensagem").value = "";
+        });
+    });
+    
+    socket.on("atualizar_mensagens", function(dados){    //Pega a msg escrita e mandar para o idex.js para madar pro historico
+        var mensagem_formatada = document.createElement("p");
+
+        //Definindo a classificação da mensagem.
+        if (dados.tipo == "sistema") mensagem_formatada.setAttribute("class", "sistema");
+        else mensagem_formatada.setAttribute("class", "privada");
+
+        //add msg para o paragrafo.
+        mensagem_formatada.appendChild(document.createTextNode(dados.msg));
+
+        //add novo paragrafo com msg para o histórico.
+        var historico = document.getElementById("historico_mensagens");
+        historico.appendChild(mensagem_formatada);
+
+        //Scroll the chat to the bottom.
+        historico.scrollTop = historico.scrollHeight;
     });
       
-    $("form#login").submit(function(e){  //pagina antes do chat para colocar usuriario
-        e.preventDefault();
-      
-        socket.emit("entrar", $(this).find("#apelido").val(), function(valido){ //Verifica se o usuario é valido
-            
-            
+    //Pega o nome do usuário que entrou para coloca-lo no chat.
+    var acesso = document.getElementById('login');
+    acesso.addEventListener('submit', (event) => {
+
+        event.preventDefault();
+
+
+        socket.emit('entrar', document.getElementById('apelido').value , function(valido) { 
+
+
             if(valido){
-                $("#acesso_usuario").hide();  // se for ele esconde a pagina de acesso
-                $("#sala_chat").show();         // e mostra o chat
+                document.getElementById('acesso_usuario').style.display = 'none';
+                document.getElementById('sala_chat').style.display = 'block';
+
             }else{
-                $("#acesso_usuario").val("");
+                document.getElementById('acesso_usuario').value='';
                 alert("Nome já utilizado nesta sala");
             }
-            
         });
     });
       
-    socket.on("atualizar usuarios", function(usuarios){ //manda na section os usuarios 
-        $("#lista_usuarios").empty();  
-        $("#lista_usuarios").append("<option value=''>Todos</option>");
-        $.each(usuarios, function(indice){
-    
-            var opcao_usuario = $("<option />").text(usuarios[indice]);
-            dadosClients.usuarios = usuarios
-            //console.log("OP: ",usuarios)
-            $("#lista_usuarios").append(opcao_usuario);
-        });
+    socket.on("atualizar_usuarios", (usuários) => { 
+        //Pegando a lista de usuários no html.
+        var lista = document.getElementById('lista_usuarios');
+
+        //Limpando a lista de usuários.
+        lista.options.length = 0;
+
+        //Criando options para os usuários.
+        var new_option = document.createElement('option'); 
+        new_option.setAttribute('class', 'font_participantes');
+
+        //Escrevendo título.
+        new_option.appendChild(document.createTextNode('Participantes:'));
+        lista.appendChild(new_option);
+
+        console.log('=> Há ' + usuários.length + ' usuários na sala. <=')
+        
+        //Colocando os users no html um por um.
+        var i;
+        for ( i = 0; i < usuários.length; i++){
+            var option_user = document.createElement('option');
+            option_user.setAttribute('class', 'font_users');
+            option_user.appendChild(document.createTextNode(usuários[i]));
+            lista.appendChild(option_user);
+        }
     });
 }
 
 /////END/////
-
-function getUserMediaSuccess(mediaStream) {
-    localStream = mediaStream;
-    localVideo.srcObject = mediaStream;
-}
 
 function handleError(e) {
     console.log(e);
