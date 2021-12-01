@@ -61,16 +61,15 @@ describe('Testes automatizados', ()=>{
  
     })
 
-    /*
+    
     it('Testando troca de mensagens pelo chat.', async ()=>{
 
-        //Escrevendo mensagem 
-        await driver1.findElement(By.name('texto_mensagem')).sendKeys('Opa, tudo bem ai?', Key.RETURN);
-        // para se o chrome for enviar //await driver1.findElement(By.name('b_envia_msm')).click();
-        const msm = await driver2.findElement(By.name('histórico_mensagens')).findElement(By.className('privada')).getText();
+      //Escrevendo mensagem 
+      await driver1.findElement(By.name('texto_mensagem')).sendKeys('Opa, tudo bem ai?', Key.RETURN);
+      const mensagem = await driver2.findElement(By.name('historico_mensagens')).findElement(By.className('privada')).getText();
 
-        expect(msm).toMatch('carlof diz: Opa, tudo bem ai?');
+      expect(mensagem).toMatch('carlof diz: Opa, tudo bem ai?');
     
     }, 120000)
-    */
+    
 });

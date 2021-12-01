@@ -2,10 +2,11 @@ const {funcaoStats, pegarDataAtual, funcClientsId, armazenaMensagem} = require('
 const express = require('express');
 const server = express();
 const app = express();
-var http = require('http').Server(server); // Criando o servidor
+const http = require('http').Server(server); // Criando o servidor
 const io = require('socket.io')(http);
-var usuarios = new Map();
-var stats = new Map();
+const usuarios = new Map();
+const nomes = []
+const stats = new Map();
 let ultimas_mensagens = [];
 const HOST = '0.0.0.0'
 
@@ -45,13 +46,20 @@ io.on('connection', function (socket) {
 
     socket.on('disconnect', function() {
         io.sockets.emit('user-left', socket.id)
-        delete usuarios[socket.apelido];
+        delete nomes[socket.apelido];
         usuarios.delete(socket.apelido); 
 		stats.delete(socket.id);
 
-        io.sockets.emit("atualizar usuarios", Object.keys(usuarios));
-        io.sockets.emit("atualizar mensagens", " " + pegarDataAtual() + " " + socket.apelido + " saiu da sala");
-    })
+        var mensagem = "[ " + pegarDataAtual() + " ] " + socket.apelido + " saiu da sala";
+		var obj_mensagem = {msg: mensagem, tipo: 'sistema'};
+
+
+		// No caso da saída de um usuário, a lista de usuários é atualizada
+		// junto de um aviso em mensagem para os participantes da sala		
+		io.sockets.emit("atualizar_usuarios", Object.keys(nomes));
+		io.sockets.emit("atualizar_mensagens", obj_mensagem);
+
+		armazenaMensagem(obj_mensagem, ultimas_mensagens);})
 
 	socket.on('estatisticas', function(dados, userId) {
 		peers = userId
@@ -60,24 +68,49 @@ io.on('connection', function (socket) {
 
     /////chat websocket/////
     socket.on("entrar", function(apelido, callback){
-        if(!(apelido in usuarios)){
-            socket.apelido = apelido; 
-            usuarios[apelido] = socket;
-            
-            
-            io.sockets.emit("atualizar usuarios", Object.keys(usuarios));  //atualiza o select para mostra o usurios
-            io.sockets.emit("atualizar mensagens", " " + pegarDataAtual() + " " + apelido + " acabou de entrar na sala"); //mostra no historio a chegado do usurario
-            io.sockets.emit("desc", " " + pegarDataAtual() + " " + apelido);
-            callback(true);
-        }else{
-            callback(false);
-        }
-        });
+        if(!usuarios.get(apelido)){
+			socket.apelido = apelido;
+			nomes[apelido] = socket;			
+			usuarios.set(apelido, socket); // Adicionando o nome de usuário a lista armazenada no servidor
+			usuarios.forEach(i=>{obj = i})
+
+			// Enviar para o usuário ingressante as ultimas mensagens armazenadas.
+			for(indice in ultimas_mensagens){
+				socket.emit("atualizar mensagens", ultimas_mensagens[indice]);
+			}
+
+			var mensagem = "[ " + pegarDataAtual() + " ] " + apelido + " acabou de entrar na sala";
+			var obj_mensagem = {msg: mensagem, tipo: 'sistema'};
+
+			io.sockets.emit("atualizar_usuarios", Object.keys(nomes)); // Enviando a nova lista de usuários
+			io.sockets.emit("atualizar_mensagens", obj_mensagem); // Enviando mensagem anunciando entrada do novo usuário
+
+			armazenaMensagem(obj_mensagem, ultimas_mensagens); // Guardando a mensagem na lista de histórico
+
+			callback(true);
+		}else{
+			callback(false);
+		}
+    });
         
-    socket.on("enviar mensagem", function(mensagem_enviada, callback){  //envia a msg que irá pro historico de msg
-        mensagem_enviada = " " + pegarDataAtual() + " " + socket.apelido+ ": " +  mensagem_enviada;
-        io.sockets.emit("atualizar mensagens", mensagem_enviada);
-        callback();
+    socket.on("enviar_mensagem", function(dados, callback){  //envia a msg que irá pro historico de msg
+        var mensagem_enviada = dados.msg;
+		var usuario = dados.usu;
+		if(usuario == null) usuario = ''; // Caso não tenha um usuário, a mensagem será enviada para todos da sala
+
+		mensagem_enviada = "[ " + pegarDataAtual() + " ] " + socket.apelido + " diz: " + mensagem_enviada;
+		var obj_mensagem = {msg: mensagem_enviada, tipo: ''};
+
+		if(usuario == ''){
+			io.sockets.emit("atualizar_mensagens", obj_mensagem);
+			armazenaMensagem(obj_mensagem, ultimas_mensagens); // Armazenando a mensagem
+		}else{
+			obj_mensagem.tipo = 'privada';
+			socket.emit("atualizar_mensagens", obj_mensagem); // Emitindo a mensagem para o usuário que a enviou
+			usuarios.get(usuario).emit("atualizar_mensagens", obj_mensagem); // Emitindo a mensagem para o usuário escolhido
+		}
+		
+		callback();
     });
 });
   

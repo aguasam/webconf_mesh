@@ -13,6 +13,13 @@
 		<div id="cabecalho">
 			<h1>WebConf</h1>
 		</div>
+
+		<div id="barra_lateral">
+			<div class="icone_lateral">
+				<i class="fi-rr-list"></i>
+			</div>
+			<select multiple="multiple" id='lista_usuarios'><option value=''>Todos</option></select>
+		</div>
 	
 		<div id='acesso_usuario'>
 			<form id='login'>
@@ -45,10 +52,13 @@
 				</div>
 				
 				<div id='sala_chat'>
-					<div id="historico_mensagens"></div>
+					<div id="historico_mensagens" name = "historico_mensagens"></div>
+					<!-- 
+					<select multiple="multiple" id='lista_usuarios'><option value=''>Todos</option></select>
+					-->
 					<form id='chat'>
 						<input type='text' id='texto_mensagem' name='texto_mensagem' />
-						<input type='submit' value='enviar mensagem' />	
+						<input type='submit'  name='enviar_mensagem' value='enviar_mensagem' />	
 					</form>
 				</div>
 				

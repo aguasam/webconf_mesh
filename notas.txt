@@ -91,3 +91,9 @@ preciso implementar o historico de mensagens no chat agr
 o erro que da no teste do selenium é pq o historico de msg n existe
 da pr implementar tranquilo o historico no index mudando o usuarios de obj para map'
 porem, pra mudar no main, precisa ver essa questao do jquery, pq o luis tirou o historico do chat dele
+
+
+parece que o socket n ta guardadno o id ou disponibilizando ele
+
+
+unico problema atual da minha pagina é que o chat n tem historico de mensagens
