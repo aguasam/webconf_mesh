@@ -97,3 +97,72 @@ parece que o socket n ta guardadno o id ou disponibilizando ele
 
 
 unico problema atual da minha pagina é que o chat n tem historico de mensagens
+
+tarefas -> tentar usar os testes no firefox
+           acesso remto para conectar o webrtc de outro pc na msm rede
+
+
+ACESSO REMOTO : 
+
+*redirecionamneto de portas
+https://www.iperiusbackup.net/pt-br/aprenda-a-redirecionar-portas-para-a-internet/
+
+*Servidor web dinamico
+https://developer.mozilla.org/pt-BR/docs/Learn/Common_questions/What_is_a_web_server
+
+*outras alternativas
+https://www.pluralsight.com/guides/exposing-your-local-node-js-app-to-the-world
+
+
+
+teste 1 =>{
+
+    usar o wamp server
+    mamawp(mac)
+}
+
+teste 2 => {
+
+    usar o xampp
+    https://www.ti-enxame.com/pt/node.js/como-instalar-o-nodejs-no-xampp-localhost/1040739836/
+    https://www.youtube.com/watch?v=zKRqsj-zSTo
+
+    conectar dois pcs no localhost
+    https://www.ti-enxame.com/pt/localhost/como-eu-me-conecto-este-localhost-de-outro-computador-na-mesma-rede/941830102/
+
+    ^
+    |
+
+    na sessao de comentarios tem outras alternativas pra teste
+
+}
+
+teste 3 => {
+
+    localhost.run
+    http://localhost.run/
+
+    o que é:
+    https://medium.com/cristiano-cunha/expor-localhst-web-54744cf5ffd2
+}
+
+teste 4 =>{
+
+    ngrok
+    https://ngrok.com/
+
+    o que é:
+    https://medium.com/desenvolvendo-com-paixao/ngrok-do-localhost-para-o-mundo-5445ad08419
+
+    ^
+    | 
+
+    aqui ele usa um exemplo com o node
+    + achei mais interessante esses exemplos e esse artigo do que o teste 3
+
+    **ngrok for vscode -> Aperta ctrl+P no vscode e cola isso:
+                            ext install philnash.ngrok-for-vscode e da enter
+
+    erros: provavelmente o node n ta servindo as requisicoes http -> por causa disso acaba n dando msg nenhuma la
+    https://stackoverflow.com/questions/31321477/using-ngrok-with-websocket-or-socket-io
+}

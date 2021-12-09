@@ -3,6 +3,7 @@
 }
 form input[type='text']{
 	border:2px solid yellow;
+	color: black;
 	border-radius: 5px;
 	padding:5px;
 	width: 500px;
@@ -11,7 +12,7 @@ form input[type='submit']{
 	background: yellow;
 	border:none;
 	border-radius: 5px;
-	color:#FFF;
+	color:black;
 	cursor:pointer;
 	font-weight: bold;
 	padding:7px 5px;
@@ -21,9 +22,10 @@ form input[type='submit']{
 	background: #FFF;
 	border:2px solid yellow;
 	height: 200px;
+	width:500px;
 	float:left;
 	margin-bottom: 10px;
-	width:500px;
+	
 }
 #sala_chat{
 	display: none;
@@ -31,11 +33,15 @@ form input[type='submit']{
 #acesso_usuario{
 	height:30px;
 	width:200px;
-	float: left;
-	margin-top:-15px;
-	position: fixed;
+	margin-top: 10px;
+	margin-left: 20%;
+	/*float: left;*/
+
+
+	/*margin-top:-15px;*/
+	/*position: absolute;
 	top:70%;
-	left: 30%
+	left: 30% */
 	/*margin-left:-100px;*/
 	/*left:50%;*/
 }
@@ -54,7 +60,7 @@ border-left: 1px solid yellow;
 
 #historico_mensagens .sistema{
 	background-color: yellow;
-	color: #FFF;
+	color: black;
 	font-weight: bold;
 }
 

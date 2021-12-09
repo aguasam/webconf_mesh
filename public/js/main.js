@@ -18,7 +18,7 @@ function gotRemoteStream(event, userId) {
     remoteVideo.setAttribute('data-socket', userId);
     remoteVideo.srcObject   = event.stream;
     remoteVideo.autoplay    = true;
-    remoteVideo.muted       = true;
+    remoteVideo.muted       = false;
     remoteVideo.playsinline = true;
     document.querySelector('.videos').appendChild(remoteVideo);
 }
@@ -168,7 +168,8 @@ function createPC(socket, userId, mediaStream){
 
 //connectSOcketToSignaling
 function connectSocketToSignaling(mediaStream) {
-    const socket = io.connect('http://localhost:3000', { secure: true });
+    //const socket = io.connect('http://localhost:3000', { secure: true });
+    var socket = io();
 
     ////////////////////////////////////////////////////////////////////////////
     socket.on('connect', () => {
