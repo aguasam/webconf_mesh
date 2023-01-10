@@ -1,73 +1,33 @@
 <!DOCTYPE html>
 <html>
-	<head>
-		<meta charset="utf-8">
-		<title>WebConf</title>
-		<link rel="stylesheet" type="text/css" href="css/style.css">
-		<link rel="stylesheet" href="css/caixa_texto.css">
-		<link rel="stylesheet" type="text/css" href="css/icones/uicons-regular-rounded/css/uicons-regular-rounded.css">
-		
-		
-	</head>
-	<body>
-		<div id="cabecalho">
-			<h1>WebConf</h1>
-		</div>
-
-		<div id="barra_lateral">
-			<div class="icone_lateral">
-				<i class="fi-rr-list"></i>
-			</div>
-			<select multiple="multiple" id='lista_usuarios'><option value=''>Todos</option></select>
-		</div>
-	
-		<div id='acesso_usuario'>
-			<form id='login'>
-				<input type='text' placeholder='Insira seu apelido' name='apelido' id='apelido' />
-				<input type='submit' value='Entrar' />
-			</form>
-		</div>
-	
-		<div id="conteudo_principal">
-			<div id="tela">
-				<div class="monitor">
-					<div class="videos">
-						<video id="localVideo" autoplay muted playsinline ></video>
-					</div>
-					
-					<br />
-					<div id="connections"></div>
-				</div>
-
-				<div class="configuracoes">
-					<span class="fi fi-rr-volume"></span>
-					<span class="fi fi-rr-compress"></span>
-					<span class="fi fi-rr-expand"></span>
-					<span class="fi fi-rr-eye-crossed"></span>
-					<span class="fi fi-rr-eye"></span>
-					<div class="icone_saida">
-						<span class="fi fi-rr-user-remove"></span>
-					</div>
-					
-				</div>
-				
-				<div id='sala_chat'>
-					<div id="historico_mensagens" name = "historico_mensagens"></div>
-					<!-- 
-					<select multiple="multiple" id='lista_usuarios'><option value=''>Todos</option></select>
-					-->
-					<form id='chat'>
-						<input type='text' id='texto_mensagem' name='texto_mensagem' />
-						<input type='submit'  name='enviar_mensagem' value='enviar_mensagem' />	
-					</form>
-				</div>
-				
-			</div>
-
-			<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
-  			<script src="/socket.io/socket.io.js"></script>
-			<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.1.0/socket.io.js"></script>
-			<script src="https://webrtc.github.io/adapter/adapter-latest.js"></script>
-			<script src="js/main.js"></script>
-	</body>
+  <head>
+    <meta charset="utf-8">
+    <title>WebRTC Video Chat</title>
+    <link rel="stylesheet" type="text/css" href="css/style.css">
+    <link rel="stylesheet" type="text/css" href="css/chat.css">
+  </head>
+  <body>
+    <div id="video-container">
+      <video id="local-video" autoplay muted playsinline></video>
+      <div id="remote-videos"></div>
+    </div>
+    <div id="chat-container">
+      <div id="chat-header">
+        <h3>Chat</h3>
+      </div>
+      <div id="chat-body">
+        <ul id="chat-messages"></ul>
+        <form id="chat-form">
+          <input type="text" id="chat-input" placeholder="Type your message...">
+          <button type="submit">Send</button>
+        </form>
+      </div>
+    </div>
+    <script type="text/javascript" src="https://webrtc.github.io/adapter/adapter-latest.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.3.0/socket.io.js"></script>
+    <script type="text/javascript" src="js/app.js"></script>
+    <script type="text/javascript" src="js/WebRTC.js"></script>
+    <script type="text/javascript" src="js/Chat.js"></script>
+    <script type="text/javascript" src="js/Statistics.js"></script>
+  </body>
 </html>

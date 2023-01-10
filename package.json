@@ -1,14 +1,19 @@
 {
+  "name": "webrtc-peer-to-peer",
+  "version": "1.0.0",
+  "description": "A WebRTC based peer-to-peer video and audio streaming and chat application",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "test": "jest --verbose"
+  },
+  "author": "Carlos Vinicius Ferri Pereira",
+  "license": "MIT",
   "dependencies": {
     "express": "^4.17.1",
-    "selenium-webdriver": "^4.1.0",
-    "socket.io": "^2.4.1"
+    "socket.io": "^3.0.0"
   },
   "devDependencies": {
-    "chromedriver": "^96.0.0",
-    "jest": "^27.3.1"
-  },
-  "scripts": {
-    "test": "jest"
+    "jest": "^26.0.1"
   }
 }
